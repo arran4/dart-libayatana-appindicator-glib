@@ -224,7 +224,7 @@ static void onBusMethodCall (GDBusConnection *pConnection, const gchar *sSender,
 
         if (nCompare == 0)
         {
-            if (pPrivate->pActions)
+            if (pPrivate->pActions && pPrivate->sSecActivateTarget)
             {
                 GAction *pAction = g_action_map_lookup_action (G_ACTION_MAP (pPrivate->pActions), pPrivate->sSecActivateTarget);
 
