@@ -35,18 +35,20 @@ dependencies:
   - primary click (`setPrimaryActivateTarget`)
   - secondary click (`setSecondaryActivateTarget`)
   - double click (`setDoubleClickTarget`)
+- Registers a dedicated well-known D-Bus service name before watcher registration to improve host compatibility.
+- Exposes `IconPixmap`/`AttentionIconPixmap`, `WindowId`, and `ItemIsMenu` properties for richer host support.
 - Double-click behavior is configurable with `doubleClickWindow`.
 
 ## Example
 
 A full showcase is available in `example/simple_client.dart` with:
 
-- dynamic label updates,
-- menu + submenu composition,
-- mapped click actions,
-- double-click reset behavior,
+- dynamic label updates and status transitions,
+- menu + submenu composition that mirrors the historical C sample,
+- mapped primary/secondary/double-click actions,
+- icon source toggling and pixmap fallback support,
 - scroll-driven progress adjustment,
-- structured event logging.
+- structured event logging and watcher diagnostics.
 
 Run it with:
 

@@ -22,14 +22,14 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(contains('/org/ayatana/appindicator/test_indicator')),
+      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.[0-9]+$')),
     );
 
     await indicator.close();
 
     expect(
       watcher.unregisteredItems,
-      contains(contains('/org/ayatana/appindicator/test_indicator')),
+      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.[0-9]+$')),
     );
 
     await client.close();
@@ -47,8 +47,10 @@ void main() {
 
     await Future.delayed(Duration(milliseconds: 200));
 
-    expect(watcher.registeredItems,
-        contains(contains('/org/ayatana/appindicator/freedesktop_indicator')));
+    expect(
+      watcher.registeredItems,
+      contains(matches(r'^org\.ayatana\.appindicator\.freedesktop_indicator\.[0-9]+$')),
+    );
 
     await indicator.close();
     await client.close();
@@ -112,11 +114,11 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(contains('/org/ayatana/appindicator/indicator_ea0b3f80')),
+      contains(matches(r'^org\.ayatana\.appindicator\.indicator_ea0b3f80\.[0-9]+$')),
     );
     expect(
       watcher.registeredItems,
-      contains(contains('/org/ayatana/appindicator/indicator_123_start')),
+      contains(matches(r'^org\.ayatana\.appindicator\.indicator_123_start\.[0-9]+$')),
     );
 
     await emptyAfterSanitize.close();
@@ -152,6 +154,23 @@ void main() {
     for (final subscription in subscriptions) {
       await subscription.cancel();
     }
+    await indicator.close();
+  });
+
+
+  test('AppIndicator exposes icon pixmap related properties', () async {
+    var indicator = AppIndicator(id: 'pixmap-indicator');
+    indicator
+      ..itemIsMenu = true
+      ..windowId = 77
+      ..iconPixmaps = const [
+        IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0x00, 0x00, 0xff]),
+      ]
+      ..attentionIconPixmaps = const [
+        IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0xff, 0x00, 0x00]),
+      ];
+
+    await indicator.connect();
     await indicator.close();
   });
 
