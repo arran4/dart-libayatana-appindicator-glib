@@ -3,6 +3,7 @@ import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
   final List<String> registeredItems = [];
+  final List<String> unregisteredItems = [];
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -17,6 +18,24 @@ class MockWatcher extends StatusNotifierWatcher {
   @override
   Future<DBusMethodResponse> doRegisterStatusNotifierHost(String service) async {
     return DBusMethodSuccessResponse([]);
+  }
+
+  @override
+  Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
+    if (methodCall.interface == 'org.kde.StatusNotifierWatcher' &&
+        methodCall.name == 'UnregisterStatusNotifierItem') {
+      if (methodCall.signature != DBusSignature('s')) {
+        return DBusMethodErrorResponse.invalidArgs();
+      }
+
+      final service = methodCall.values[0].asString();
+      unregisteredItems.add(service);
+      registeredItems.remove(service);
+      await emitStatusNotifierItemUnregistered(service);
+      return DBusMethodSuccessResponse([]);
+    }
+
+    return super.handleMethodCall(methodCall);
   }
 
   @override

@@ -26,6 +26,12 @@ void main() {
     );
 
     await indicator.close();
+
+    expect(
+      watcher.unregisteredItems,
+      contains(contains('/org/ayatana/appindicator/test_indicator')),
+    );
+
     await client.close();
   });
 
