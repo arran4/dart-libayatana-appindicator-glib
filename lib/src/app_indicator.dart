@@ -57,15 +57,18 @@ class AppIndicator {
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
-  final _secondaryActivateController = StreamController<SecondaryActivateEvent>.broadcast();
+  final _secondaryActivateController =
+      StreamController<SecondaryActivateEvent>.broadcast();
+  bool _isConnected = false;
+  final Set<_PendingSignal> _pendingSignals = <_PendingSignal>{};
 
   AppIndicator(
       {required this.id,
       String iconName = '',
       AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
       : _client = DBusClient.session(),
-        _object = _AppIndicatorObject(DBusObjectPath(
-            '/org/ayatana/appindicator/${_cleanId(id)}')) {
+        _object =
+            _AppIndicatorObject(DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
     _object.id = id;
     _object.iconName = iconName;
     _object.category = category.name;
@@ -85,7 +88,7 @@ class AppIndicator {
     };
 
     _object.onXAyatanaSecondaryActivate = (timestamp) {
-        _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
+      _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
     };
   }
 
@@ -108,19 +111,19 @@ class AppIndicator {
 
   set status(AppIndicatorStatus status) {
     _object.status = status.name;
-    _object.emitNewStatus(status.name);
+    _queueSignal(_PendingSignal.newStatus);
   }
 
   String get iconName => _object.iconName;
 
   set iconName(String name) {
     _object.iconName = name;
-    _object.emitNewIcon();
+    _queueSignal(_PendingSignal.newIcon);
   }
 
   set attentionIconName(String name) {
     _object.attentionIconName = name;
-    _object.emitNewAttentionIcon();
+    _queueSignal(_PendingSignal.newAttentionIcon);
   }
 
   set iconAccessibleDesc(String description) {
@@ -135,21 +138,21 @@ class AppIndicator {
 
   set title(String title) {
     _object.title = title;
-    _object.emitNewTitle();
+    _queueSignal(_PendingSignal.newTitle);
   }
 
   String get label => _object.xAyatanaLabel;
 
   set label(String label) {
     _object.xAyatanaLabel = label;
-    _object.emitXAyatanaNewLabel(label, _object.xAyatanaLabelGuide);
+    _queueSignal(_PendingSignal.newLabel);
   }
 
   String get labelGuide => _object.xAyatanaLabelGuide;
 
   set labelGuide(String guide) {
     _object.xAyatanaLabelGuide = guide;
-    _object.emitXAyatanaNewLabel(_object.xAyatanaLabel, guide);
+    _queueSignal(_PendingSignal.newLabel);
   }
 
   int get orderingIndex => _object.xAyatanaOrderingIndex;
@@ -160,7 +163,7 @@ class AppIndicator {
 
   set iconThemePath(String path) {
     _object.iconThemePath = path;
-    _object.emitNewIconThemePath(path);
+    _queueSignal(_PendingSignal.newIconThemePath);
   }
 
   // Tooltip properties
@@ -168,21 +171,21 @@ class AppIndicator {
 
   set tooltipIconName(String name) {
     _object.toolTipIconName = name;
-    _object.emitNewToolTip();
+    _queueSignal(_PendingSignal.newToolTip);
   }
 
   String get tooltipTitle => _object.toolTipTitle;
 
   set tooltipTitle(String title) {
     _object.toolTipTitle = title;
-    _object.emitNewToolTip();
+    _queueSignal(_PendingSignal.newToolTip);
   }
 
   String get tooltipDescription => _object.toolTipDescription;
 
   set tooltipDescription(String description) {
     _object.toolTipDescription = description;
-    _object.emitNewToolTip();
+    _queueSignal(_PendingSignal.newToolTip);
   }
 
   void setMenu(List<DBusMenuItem> items) {
@@ -225,10 +228,14 @@ class AppIndicator {
 
   // Events
   Stream<ScrollEvent> get scrollEvents => _scrollController.stream;
-  Stream<SecondaryActivateEvent> get secondaryActivateEvents => _secondaryActivateController.stream;
+  Stream<SecondaryActivateEvent> get secondaryActivateEvents =>
+      _secondaryActivateController.stream;
 
   Future<void> connect() async {
     await _client.registerObject(_object);
+    _isConnected = true;
+    await _flushPendingSignals();
+
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
 
@@ -278,6 +285,53 @@ class AppIndicator {
     await _secondaryActivateController.close();
     await _client.close();
   }
+
+  void _queueSignal(_PendingSignal signal) {
+    if (_isConnected) {
+      unawaited(_emitSignal(signal));
+      return;
+    }
+
+    _pendingSignals.add(signal);
+  }
+
+  Future<void> _flushPendingSignals() async {
+    for (final signal in _PendingSignal.values) {
+      if (_pendingSignals.remove(signal)) {
+        await _emitSignal(signal);
+      }
+    }
+  }
+
+  Future<void> _emitSignal(_PendingSignal signal) {
+    switch (signal) {
+      case _PendingSignal.newStatus:
+        return _object.emitNewStatus(_object.status);
+      case _PendingSignal.newIcon:
+        return _object.emitNewIcon();
+      case _PendingSignal.newAttentionIcon:
+        return _object.emitNewAttentionIcon();
+      case _PendingSignal.newTitle:
+        return _object.emitNewTitle();
+      case _PendingSignal.newLabel:
+        return _object.emitXAyatanaNewLabel(
+            _object.xAyatanaLabel, _object.xAyatanaLabelGuide);
+      case _PendingSignal.newIconThemePath:
+        return _object.emitNewIconThemePath(_object.iconThemePath);
+      case _PendingSignal.newToolTip:
+        return _object.emitNewToolTip();
+    }
+  }
+}
+
+enum _PendingSignal {
+  newStatus,
+  newIcon,
+  newAttentionIcon,
+  newTitle,
+  newLabel,
+  newIconThemePath,
+  newToolTip,
 }
 
 class _WatcherEndpoint {
