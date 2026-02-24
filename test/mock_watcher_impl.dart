@@ -1,5 +1,5 @@
-import 'package:dbus/dbus.dart';
 import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
+import 'package:dbus/dbus.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
   final List<String> registeredItems = [];

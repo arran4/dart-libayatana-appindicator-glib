@@ -1,5 +1,4 @@
 @TestOn('linux')
-import 'dart:async';
 import 'dart:io';
 
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
