@@ -28,6 +28,18 @@ class SecondaryActivateEvent {
   SecondaryActivateEvent(this.x, this.y, [this.timestamp = 0]);
 }
 
+/// Error thrown when registering the status notifier item with the watcher fails.
+class AppIndicatorRegistrationException implements Exception {
+  final Object cause;
+  final StackTrace stackTrace;
+
+  AppIndicatorRegistrationException(this.cause, this.stackTrace);
+
+  @override
+  String toString() =>
+      'AppIndicatorRegistrationException: Failed to register with watcher: $cause';
+}
+
 class AppIndicator {
   static const List<_WatcherEndpoint> _watcherEndpoints = [
     _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/StatusNotifierWatcher'),
@@ -230,6 +242,8 @@ class AppIndicator {
         await candidate.callRegisterStatusNotifierItem(_object.path.toString());
         _watcher = candidate;
         return;
+    } catch (error, stackTrace) {
+      throw AppIndicatorRegistrationException(error, stackTrace);
       } catch (_) {
         // Try the next known watcher endpoint.
       }
