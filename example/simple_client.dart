@@ -117,6 +117,15 @@ Future<void> main() async {
   });
 
   await indicator.connect();
+
+  if (!indicator.isWatcherAvailable) {
+    print('Indicator exported on D-Bus, but no StatusNotifierWatcher is available.');
+    print('No icon will be shown until an indicator host/watcher is running.');
+  } else if (!await indicator.isStatusNotifierHostRegistered()) {
+    print('Indicator registered with watcher, but no StatusNotifierHost is registered.');
+    print('Ensure your desktop environment has an AppIndicator/SNI host enabled.');
+  }
+
   log('Indicator connected. Use Ctrl+C to exit.');
 
   heartbeat = Timer.periodic(const Duration(seconds: 2), (_) {
