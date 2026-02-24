@@ -22,14 +22,14 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+$')),
+      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+/org/ayatana/appindicator/test_indicator$')),
     );
 
     await indicator.close();
 
     expect(
       watcher.unregisteredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+$')),
+      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+/org/ayatana/appindicator/test_indicator$')),
     );
 
     await client.close();
@@ -49,7 +49,7 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+$')),
+      contains(matches(r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+/org/ayatana/appindicator/freedesktop_indicator$')),
     );
 
     await indicator.close();
@@ -114,11 +114,11 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.indicator_ea0b3f80\.p[0-9]+$')),
+      contains(matches(r'^org\.ayatana\.appindicator\.indicator_ea0b3f80\.p[0-9]+/org/ayatana/appindicator/indicator_ea0b3f80$')),
     );
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+$')),
+      contains(matches(r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+/org/ayatana/appindicator/indicator_123_start$')),
     );
 
     await emptyAfterSanitize.close();

@@ -438,9 +438,9 @@ class AppIndicator {
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
     final registrationTargets = <String>[
-      _serviceName,
       '$_serviceName${_object.path}',
       _object.path.toString(),
+      _serviceName,
     ];
 
     Object? lastError;

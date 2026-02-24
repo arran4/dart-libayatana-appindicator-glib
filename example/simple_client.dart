@@ -5,6 +5,10 @@ import 'package:ayatana_appindicator/ayatana_appindicator.dart';
 import 'package:dbus/dbus.dart';
 
 Future<void> main() async {
+  void log(String message) => stdout.writeln('[showcase] $message');
+
+  log('Starting AppIndicator showcase...');
+
   final indicator = AppIndicator(
     id: 'example-feature-showcase',
     iconName: 'demo-indicator',
@@ -44,8 +48,6 @@ Future<void> main() async {
 
   late Timer heartbeat;
   late int submenuId;
-
-  void log(String message) => stdout.writeln('[showcase] $message');
 
   void updateLabel() {
     indicator.label = showLabel ? '$percentage%' : '';
@@ -222,17 +224,31 @@ Future<void> main() async {
   });
 
   await indicator.connect();
+  log('Connected to DBus with id=${indicator.id}.');
+  log('Icon theme path: ${Platform.script.resolve('assets').toFilePath()}');
+  log('Current icon name: ${indicator.iconName}');
 
   if (!indicator.isWatcherAvailable) {
     log('No StatusNotifierWatcher is available on session bus.');
   } else if (!await indicator.isStatusNotifierHostRegistered()) {
     log('Watcher found but no StatusNotifierHost registered.');
+  } else {
+    log('Watcher + host are available. Indicator should now be interactive.');
   }
 
   heartbeat = Timer.periodic(const Duration(seconds: 1), (_) {
     percentage = (percentage + 1) % 101;
     updateLabel();
   });
+
+  ProcessSignal.sigint.watch().listen((_) async {
+    log('SIGINT received, stopping showcase...');
+    heartbeat.cancel();
+    await indicator.close();
+    exit(0);
+  });
+
+  log('Showcase is running. Press ^C to stop.');
 
   await Completer<void>().future;
 }
