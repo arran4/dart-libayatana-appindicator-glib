@@ -111,8 +111,8 @@ class DBusActionGroup extends DBusObject {
       DBusStruct([
         DBusBoolean(action.enabled),
         DBusSignature(action.parameterType ?? ''),
-        DBusArray(
-            DBusSignature('v'), action.state != null ? [action.state!] : []),
+        DBusArray(DBusSignature('v'),
+            action.state != null ? [DBusVariant(action.state!)] : []),
       ])
     ]);
   }
@@ -124,8 +124,8 @@ class DBusActionGroup extends DBusObject {
       descriptions[DBusString(entry.key)] = DBusStruct([
         DBusBoolean(entry.value.enabled),
         DBusSignature(entry.value.parameterType ?? ''),
-        DBusArray(
-            DBusSignature('v'), entry.value.state != null ? [entry.value.state!] : []),
+        DBusArray(DBusSignature('v'),
+            entry.value.state != null ? [DBusVariant(entry.value.state!)] : []),
       ]);
     }
     return DBusMethodSuccessResponse(
@@ -187,8 +187,8 @@ class DBusActionGroup extends DBusObject {
     return DBusStruct([
       DBusBoolean(action.enabled),
       DBusSignature(action.parameterType ?? ''),
-      DBusArray(
-          DBusSignature('v'), action.state != null ? [action.state!] : []),
+      DBusArray(DBusSignature('v'),
+          action.state != null ? [DBusVariant(action.state!)] : []),
     ]);
   }
 
