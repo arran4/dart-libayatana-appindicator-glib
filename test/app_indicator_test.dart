@@ -20,20 +20,35 @@ void main() {
     // Allow some time for async calls
     await Future.delayed(Duration(milliseconds: 200));
 
-    expect(watcher.registeredItems, contains(contains('/org/ayatana/appindicator/test_indicator')));
+    expect(
+      watcher.registeredItems,
+      contains(contains('/org/ayatana/appindicator/test_indicator')),
+    );
 
     await indicator.close();
     await client.close();
   });
 
   test('AppIndicator properties', () {
-      var indicator = AppIndicator(id: 'prop-indicator');
-      indicator.title = 'Title';
-      indicator.iconName = 'Icon';
-      indicator.tooltipTitle = 'TipTitle';
+    var indicator = AppIndicator(id: 'prop-indicator');
+    indicator.status = AppIndicatorStatus.attention;
+    indicator.title = 'Title';
+    indicator.iconName = 'Icon';
+    indicator.label = 'Label';
+    indicator.labelGuide = 'Guide';
+    indicator.orderingIndex = 7;
+    indicator.tooltipIconName = 'TipIcon';
+    indicator.tooltipTitle = 'TipTitle';
+    indicator.tooltipDescription = 'TipDescription';
 
-      // We assume setters work as they modify internal state which DBus object reads.
-      // Since we can't easily introspect loopback DBus without knowing unique name,
-      // and we don't want to expose internal object, we trust the implementation (verified by code review).
+    expect(indicator.status, equals(AppIndicatorStatus.attention));
+    expect(indicator.title, equals('Title'));
+    expect(indicator.iconName, equals('Icon'));
+    expect(indicator.label, equals('Label'));
+    expect(indicator.labelGuide, equals('Guide'));
+    expect(indicator.orderingIndex, equals(7));
+    expect(indicator.tooltipIconName, equals('TipIcon'));
+    expect(indicator.tooltipTitle, equals('TipTitle'));
+    expect(indicator.tooltipDescription, equals('TipDescription'));
   });
 }
