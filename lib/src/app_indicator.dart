@@ -69,7 +69,28 @@ class AppIndicator {
   }
 
   static String _cleanId(String id) {
-    return id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    final sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    final collapsed = sanitized.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_+|_+$'), '');
+
+    if (collapsed.isEmpty) {
+      return 'indicator_${_stableHash(id)}';
+    }
+
+    if (RegExp(r'^[0-9]').hasMatch(collapsed)) {
+      return 'indicator_$collapsed';
+    }
+
+    return collapsed;
+  }
+
+  static String _stableHash(String input) {
+    var hash = 0x811c9dc5;
+    for (final unit in input.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0xffffffff;
+    }
+
+    return hash.toRadixString(16).padLeft(8, '0');
   }
 
   // Properties setters

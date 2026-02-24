@@ -36,4 +36,33 @@ void main() {
       // Since we can't easily introspect loopback DBus without knowing unique name,
       // and we don't want to expose internal object, we trust the implementation (verified by code review).
   });
+
+  test('AppIndicator sanitizes ids to valid non-empty DBus path segments', () async {
+    var client = DBusClient.session();
+
+    var watcher = MockWatcher();
+    await client.registerObject(watcher);
+    await client.requestName('org.kde.StatusNotifierWatcher');
+
+    var emptyAfterSanitize = AppIndicator(id: '!!!');
+    await emptyAfterSanitize.connect();
+
+    var leadingDigit = AppIndicator(id: '123-start');
+    await leadingDigit.connect();
+
+    await Future.delayed(Duration(milliseconds: 200));
+
+    expect(
+      watcher.registeredItems,
+      contains(contains('/org/ayatana/appindicator/indicator_ea0b3f80')),
+    );
+    expect(
+      watcher.registeredItems,
+      contains(contains('/org/ayatana/appindicator/indicator_123_start')),
+    );
+
+    await emptyAfterSanitize.close();
+    await leadingDigit.close();
+    await client.close();
+  });
 }
