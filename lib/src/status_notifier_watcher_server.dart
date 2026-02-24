@@ -7,29 +7,41 @@ class StatusNotifierWatcher extends DBusObject {
   /// Creates a new object to expose on [path].
   StatusNotifierWatcher({DBusObjectPath path = const DBusObjectPath.unchecked('/StatusNotifierWatcher')}) : super(path);
 
+  int protocolVersion = 0;
+  bool isStatusNotifierHostRegistered = false;
+  final List<String> registeredStatusNotifierItems = [];
+
   /// Gets value of property org.kde.StatusNotifierWatcher.ProtocolVersion
   Future<DBusMethodResponse> getProtocolVersion() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierWatcher.ProtocolVersion not implemented');
+    return DBusMethodSuccessResponse([DBusInt32(protocolVersion)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierWatcher.IsStatusNotifierHostRegistered
   Future<DBusMethodResponse> getIsStatusNotifierHostRegistered() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierWatcher.IsStatusNotifierHostRegistered not implemented');
+    return DBusMethodSuccessResponse([DBusBoolean(isStatusNotifierHostRegistered)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierWatcher.RegisteredStatusNotifierItems
   Future<DBusMethodResponse> getRegisteredStatusNotifierItems() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierWatcher.RegisteredStatusNotifierItems not implemented');
+    return DBusMethodSuccessResponse([DBusArray.string(registeredStatusNotifierItems)]);
   }
 
   /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierItem()
   Future<DBusMethodResponse> doRegisterStatusNotifierItem(String service) async {
-    return DBusMethodErrorResponse.failed('org.kde.StatusNotifierWatcher.RegisterStatusNotifierItem() not implemented');
+    if (!registeredStatusNotifierItems.contains(service)) {
+      registeredStatusNotifierItems.add(service);
+      await emitStatusNotifierItemRegistered(service);
+    }
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierHost()
   Future<DBusMethodResponse> doRegisterStatusNotifierHost(String service) async {
-    return DBusMethodErrorResponse.failed('org.kde.StatusNotifierWatcher.RegisterStatusNotifierHost() not implemented');
+    if (!isStatusNotifierHostRegistered) {
+      isStatusNotifierHostRegistered = true;
+      await emitStatusNotifierHostRegistered();
+    }
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Emits signal org.kde.StatusNotifierWatcher.StatusNotifierItemRegistered

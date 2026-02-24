@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
 import 'package:dbus/dbus.dart';
 
 Future<void> main() async {
   var indicator = AppIndicator(
     id: 'example-simple-client',
-    iconName: 'indicator-messages',
+    iconName: 'demo-indicator',
     category: AppIndicatorCategory.applicationStatus,
   );
 
   indicator.status = AppIndicatorStatus.active;
-  indicator.attentionIconName = 'indicator-messages-new';
+
+  final iconThemePath = Platform.script.resolve('assets').toFilePath();
+  indicator.iconThemePath = iconThemePath;
+  indicator.attentionIconName = 'demo-indicator';
   indicator.label = '1%';
   indicator.labelGuide = '100%';
   indicator.title = 'Test Indicator (Dart)';
@@ -66,19 +70,14 @@ Future<void> main() async {
       DBusMenuItem({'label': DBusString('Sub Item 1')}, {}),
       DBusMenuItem({'label': DBusString('Sub Item 2')}, {})
   ];
-  // addSubMenu returns ID
-  // Wait, I didn't expose addSubMenu in AppIndicator yet?
-  // I added it in previous step to lib/src/app_indicator.dart, let me check.
-
-  // Checking file content or assuming I did.
-  // I did add `int addSubMenu(List<DBusMenuItem> items)` in `lib/src/app_indicator.dart`.
-
+  // addSubMenu returns the menu-model ID exported for this submenu.
   var subMenuId = indicator.addSubMenu(subItems);
 
   menuItems.add(DBusMenuItem({
       'label': DBusString('Submenu'),
   }, {
-      'submenu': DBusUint32(subMenuId) // Link to submenu
+      // The submenu property links this menu item to the exported submenu ID.
+      'submenu': DBusUint32(subMenuId)
   }));
 
   menuItems.add(DBusMenuItem({
