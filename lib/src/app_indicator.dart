@@ -28,6 +28,18 @@ class SecondaryActivateEvent {
   SecondaryActivateEvent(this.x, this.y, [this.timestamp = 0]);
 }
 
+/// Error thrown when registering the status notifier item with the watcher fails.
+class AppIndicatorRegistrationException implements Exception {
+  final Object cause;
+  final StackTrace stackTrace;
+
+  AppIndicatorRegistrationException(this.cause, this.stackTrace);
+
+  @override
+  String toString() =>
+      'AppIndicatorRegistrationException: Failed to register with watcher: $cause';
+}
+
 class AppIndicator {
   final String id;
   final DBusClient _client;
@@ -172,8 +184,8 @@ class AppIndicator {
     // Register
     try {
       await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
-    } catch (e) {
-      print('Failed to register with watcher: $e');
+    } catch (error, stackTrace) {
+      throw AppIndicatorRegistrationException(error, stackTrace);
     }
   }
 
