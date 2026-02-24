@@ -7,89 +7,109 @@ class StatusNotifierItem extends DBusObject {
   /// Creates a new object to expose on [path].
   StatusNotifierItem({DBusObjectPath path = const DBusObjectPath.unchecked('/StatusNotifierItem')}) : super(path);
 
+  String id = '';
+  String category = '';
+  String status = '';
+  String iconName = '';
+  String iconAccessibleDesc = '';
+  String attentionIconName = '';
+  String attentionAccessibleDesc = '';
+  String title = '';
+  String iconThemePath = '';
+  DBusObjectPath menu = DBusObjectPath.root;
+  String xAyatanaLabel = '';
+  String xAyatanaLabelGuide = '';
+  int xAyatanaOrderingIndex = 0;
+  DBusStruct toolTip = DBusStruct([
+    DBusString(''),
+    DBusArray(DBusSignature('(iiay)'), []),
+    DBusString(''),
+    DBusString(''),
+  ]);
+
   /// Gets value of property org.kde.StatusNotifierItem.Id
   Future<DBusMethodResponse> getId() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.Id not implemented');
+    return DBusMethodSuccessResponse([DBusString(id)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.Category
   Future<DBusMethodResponse> getCategory() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.Category not implemented');
+    return DBusMethodSuccessResponse([DBusString(category)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.Status
   Future<DBusMethodResponse> getStatus() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.Status not implemented');
+    return DBusMethodSuccessResponse([DBusString(status)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.IconName
   Future<DBusMethodResponse> getIconName() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.IconName not implemented');
+    return DBusMethodSuccessResponse([DBusString(iconName)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.IconAccessibleDesc
   Future<DBusMethodResponse> getIconAccessibleDesc() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.IconAccessibleDesc not implemented');
+    return DBusMethodSuccessResponse([DBusString(iconAccessibleDesc)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.AttentionIconName
   Future<DBusMethodResponse> getAttentionIconName() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.AttentionIconName not implemented');
+    return DBusMethodSuccessResponse([DBusString(attentionIconName)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.AttentionAccessibleDesc
   Future<DBusMethodResponse> getAttentionAccessibleDesc() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.AttentionAccessibleDesc not implemented');
+    return DBusMethodSuccessResponse([DBusString(attentionAccessibleDesc)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.Title
   Future<DBusMethodResponse> getTitle() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.Title not implemented');
+    return DBusMethodSuccessResponse([DBusString(title)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.IconThemePath
   Future<DBusMethodResponse> getIconThemePath() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.IconThemePath not implemented');
+    return DBusMethodSuccessResponse([DBusString(iconThemePath)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.Menu
   Future<DBusMethodResponse> getMenu() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.Menu not implemented');
+    return DBusMethodSuccessResponse([menu]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.XAyatanaLabel
   Future<DBusMethodResponse> getXAyatanaLabel() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.XAyatanaLabel not implemented');
+    return DBusMethodSuccessResponse([DBusString(xAyatanaLabel)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.XAyatanaLabelGuide
   Future<DBusMethodResponse> getXAyatanaLabelGuide() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.XAyatanaLabelGuide not implemented');
+    return DBusMethodSuccessResponse([DBusString(xAyatanaLabelGuide)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.XAyatanaOrderingIndex
   Future<DBusMethodResponse> getXAyatanaOrderingIndex() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.XAyatanaOrderingIndex not implemented');
+    return DBusMethodSuccessResponse([DBusUint32(xAyatanaOrderingIndex)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierItem.ToolTip
   Future<DBusMethodResponse> getToolTip() async {
-    return DBusMethodErrorResponse.failed('Get org.kde.StatusNotifierItem.ToolTip not implemented');
+    return DBusMethodSuccessResponse([toolTip]);
   }
 
   /// Implementation of org.kde.StatusNotifierItem.Scroll()
   Future<DBusMethodResponse> doScroll(int delta, String orientation) async {
-    return DBusMethodErrorResponse.failed('org.kde.StatusNotifierItem.Scroll() not implemented');
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Implementation of org.kde.StatusNotifierItem.SecondaryActivate()
   Future<DBusMethodResponse> doSecondaryActivate(int x, int y) async {
-    return DBusMethodErrorResponse.failed('org.kde.StatusNotifierItem.SecondaryActivate() not implemented');
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Implementation of org.kde.StatusNotifierItem.XAyatanaSecondaryActivate()
   Future<DBusMethodResponse> doXAyatanaSecondaryActivate(int timestamp) async {
-    return DBusMethodErrorResponse.failed('org.kde.StatusNotifierItem.XAyatanaSecondaryActivate() not implemented');
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewIcon

@@ -29,10 +29,19 @@ class SecondaryActivateEvent {
 }
 
 class AppIndicator {
+  static const List<_WatcherEndpoint> _watcherEndpoints = [
+    _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/StatusNotifierWatcher'),
+    _WatcherEndpoint('org.freedesktop.StatusNotifierWatcher', '/StatusNotifierWatcher'),
+    _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/org/kde/StatusNotifierWatcher'),
+    _WatcherEndpoint(
+        'org.freedesktop.StatusNotifierWatcher', '/org/freedesktop/StatusNotifierWatcher'),
+  ];
+
   final String id;
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
+  int? _menuGroupId;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
@@ -165,12 +174,30 @@ class AppIndicator {
   }
 
   void setMenu(List<DBusMenuItem> items) {
-    _object.menuImpl.clear();
-    _object.menuImpl.addMenu(items);
+    if (_menuGroupId == null) {
+      _menuGroupId = _object.menuImpl.addMenu(items);
+      return;
+    }
+    _object.menuImpl.setMenu(_menuGroupId!, items);
   }
 
   int addSubMenu(List<DBusMenuItem> items) {
     return _object.menuImpl.addMenu(items);
+  }
+
+  void setMenuGroup(int groupId, List<DBusMenuItem> items) {
+    _object.menuImpl.setMenu(groupId, items);
+    if (groupId == 0) {
+      _menuGroupId = groupId;
+    }
+  }
+
+  void updateMenuItems(int groupId,
+      {required int position,
+      int removeCount = 0,
+      List<DBusMenuItem> items = const <DBusMenuItem>[]}) {
+    _object.menuImpl.updateMenuItems(groupId,
+        position: position, removeCount: removeCount, items: items);
   }
 
   void setActions(List<DBusAction> actions) {
@@ -193,16 +220,24 @@ class AppIndicator {
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
 
-    // Connect to watcher
-    _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
-        path: DBusObjectPath('/StatusNotifierWatcher'));
+    for (final endpoint in _watcherEndpoints) {
+      final candidate = StatusNotifierWatcher(_client, endpoint.destination,
+          path: DBusObjectPath(endpoint.path));
 
-    // Register
-    try {
-      await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
-    } catch (e) {
-      print('Failed to register with watcher: $e');
+      try {
+        // Probe before registering so we can support backends on different names/paths.
+        await candidate.getProtocolVersion();
+        await candidate.callRegisterStatusNotifierItem(_object.path.toString());
+        _watcher = candidate;
+        return;
+      } catch (_) {
+        // Try the next known watcher endpoint.
+      }
     }
+
+    // No known watcher backend is currently present. Keep the indicator available
+    // on D-Bus and return without throwing.
+    _watcher = null;
   }
 
   Future<void> close() async {
@@ -212,23 +247,16 @@ class AppIndicator {
   }
 }
 
+class _WatcherEndpoint {
+  final String destination;
+  final String path;
+
+  const _WatcherEndpoint(this.destination, this.path);
+}
+
 class _AppIndicatorObject extends StatusNotifierItem {
   final DBusMenu menuImpl;
   final DBusActionGroup actionGroupImpl;
-
-  String id = '';
-  String category = 'ApplicationStatus';
-  String status = 'Passive';
-  String iconName = '';
-  String attentionIconName = '';
-  String iconAccessibleDesc = '';
-  String attentionAccessibleDesc = '';
-  String title = '';
-  String iconThemePath = '';
-  DBusObjectPath menu = DBusObjectPath.root;
-  String xAyatanaLabel = '';
-  String xAyatanaLabelGuide = '';
-  int xAyatanaOrderingIndex = 0;
 
   // Tooltip
   String toolTipIconName = '';
@@ -303,9 +331,9 @@ class _AppIndicatorObject extends StatusNotifierItem {
   Future<DBusMethodResponse> getToolTip() async {
     return DBusMethodSuccessResponse([
       DBusStruct([
-        DBusString(toolTipIconName.isEmpty ? iconName : toolTipIconName),
+        DBusString(toolTipIconName),
         DBusArray(DBusSignature('(iiay)'), []),
-        DBusString(toolTipTitle.isEmpty ? title : toolTipTitle),
+        DBusString(toolTipTitle),
         DBusString(toolTipDescription)
       ])
     ]);
