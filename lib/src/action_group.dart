@@ -6,7 +6,20 @@ class DBusActionGroup extends DBusObject {
   DBusActionGroup(DBusObjectPath path) : super(path);
 
   void addAction(DBusAction action) {
+    action._onStateChanged = (state) => _emitActionStateChanged(action.name, state);
+    action._onEnabledChanged = (enabled) => _emitActionEnabledChanged(action.name, enabled);
     _actions[action.name] = action;
+    _emitActionAdded(action);
+  }
+
+  void clearActions() {
+    if (_actions.isEmpty) {
+      return;
+    }
+
+    var removed = _actions.keys.toList();
+    _actions.clear();
+    _emitActionsChanged(removed: removed);
   }
 
   DBusAction? getAction(String name) => _actions[name];
@@ -157,6 +170,52 @@ class DBusActionGroup extends DBusObject {
     action.activate(param);
     return DBusMethodSuccessResponse([]);
   }
+
+  Future<void> _emitActionAdded(DBusAction action) async {
+    await _emitActionsChanged(added: {action.name: _describeAction(action)});
+  }
+
+  Future<void> _emitActionStateChanged(String name, DBusValue state) async {
+    await _emitActionsChanged(stateChanged: {name: DBusVariant(state)});
+  }
+
+  Future<void> _emitActionEnabledChanged(String name, bool enabled) async {
+    await _emitActionsChanged(enabledChanged: {name: DBusBoolean(enabled)});
+  }
+
+  DBusStruct _describeAction(DBusAction action) {
+    return DBusStruct([
+      DBusBoolean(action.enabled),
+      DBusSignature(action.parameterType ?? ''),
+      DBusArray(
+          DBusSignature('v'), action.state != null ? [action.state!] : []),
+    ]);
+  }
+
+  Future<void> _emitActionsChanged(
+      {List<String> removed = const [],
+      Map<String, DBusBoolean> enabledChanged = const {},
+      Map<String, DBusVariant> stateChanged = const {},
+      Map<String, DBusStruct> added = const {}}) async {
+    await emitSignal('org.gtk.Actions', 'Changed', [
+      DBusArray(
+          DBusSignature('s'), removed.map((name) => DBusString(name)).toList()),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('b'),
+          enabledChanged.map(
+              (k, v) => MapEntry(DBusString(k), v))),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          stateChanged.map(
+              (k, v) => MapEntry(DBusString(k), v))),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('(bgav)'),
+          added.map((k, v) => MapEntry(DBusString(k), v))),
+    ]);
+  }
 }
 
 class DBusAction {
@@ -166,6 +225,8 @@ class DBusAction {
   DBusValue? state;
   final Function(DBusValue?)? onActivate;
   final Function(DBusValue)? onStateChange;
+  Function(DBusValue)? _onStateChanged;
+  Function(bool)? _onEnabledChanged;
 
   DBusAction(this.name,
       {this.enabled = true,
@@ -178,10 +239,18 @@ class DBusAction {
     if (onActivate != null) onActivate!(parameter);
   }
 
+  void setEnabled(bool value) {
+    enabled = value;
+    if (_onEnabledChanged != null) {
+      _onEnabledChanged!(value);
+    }
+  }
+
   void changeState(DBusValue newState) {
     if (state != null) {
       state = newState;
       if (onStateChange != null) onStateChange!(newState);
+      if (_onStateChanged != null) _onStateChanged!(newState);
     }
   }
 }

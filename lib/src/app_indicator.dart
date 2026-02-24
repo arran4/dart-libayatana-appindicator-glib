@@ -88,6 +88,14 @@ class AppIndicator {
     _object.emitNewAttentionIcon();
   }
 
+  set iconAccessibleDesc(String description) {
+    _object.iconAccessibleDesc = description;
+  }
+
+  set attentionAccessibleDesc(String description) {
+    _object.attentionAccessibleDesc = description;
+  }
+
   set title(String title) {
     _object.title = title;
     _object.emitNewTitle();
@@ -101,6 +109,10 @@ class AppIndicator {
   set labelGuide(String guide) {
     _object.xAyatanaLabelGuide = guide;
     _object.emitXAyatanaNewLabel(_object.xAyatanaLabel, guide);
+  }
+
+  set orderingIndex(int orderingIndex) {
+    _object.xAyatanaOrderingIndex = orderingIndex;
   }
 
   set iconThemePath(String path) {
@@ -134,6 +146,7 @@ class AppIndicator {
   }
 
   void setActions(List<DBusAction> actions) {
+    _object.actionGroupImpl.clearActions();
     for (var action in actions) {
       _object.actionGroupImpl.addAction(action);
     }
@@ -180,11 +193,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
   String status = 'Passive';
   String iconName = '';
   String attentionIconName = '';
+  String iconAccessibleDesc = '';
+  String attentionAccessibleDesc = '';
   String title = '';
   String iconThemePath = '';
   DBusObjectPath menu = DBusObjectPath.root;
   String xAyatanaLabel = '';
   String xAyatanaLabelGuide = '';
+  int xAyatanaOrderingIndex = 0;
 
   // Tooltip
   String toolTipIconName = '';
@@ -224,6 +240,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
       DBusMethodSuccessResponse([DBusString(attentionIconName)]);
 
   @override
+  Future<DBusMethodResponse> getIconAccessibleDesc() async =>
+      DBusMethodSuccessResponse([DBusString(iconAccessibleDesc)]);
+
+  @override
+  Future<DBusMethodResponse> getAttentionAccessibleDesc() async =>
+      DBusMethodSuccessResponse([DBusString(attentionAccessibleDesc)]);
+
+  @override
   Future<DBusMethodResponse> getTitle() async =>
       DBusMethodSuccessResponse([DBusString(title)]);
 
@@ -242,6 +266,10 @@ class _AppIndicatorObject extends StatusNotifierItem {
   @override
   Future<DBusMethodResponse> getXAyatanaLabelGuide() async =>
       DBusMethodSuccessResponse([DBusString(xAyatanaLabelGuide)]);
+
+  @override
+  Future<DBusMethodResponse> getXAyatanaOrderingIndex() async =>
+      DBusMethodSuccessResponse([DBusUint32(xAyatanaOrderingIndex)]);
 
   @override
   Future<DBusMethodResponse> getToolTip() async {
