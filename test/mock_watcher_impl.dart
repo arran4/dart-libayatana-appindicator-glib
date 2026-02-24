@@ -44,6 +44,22 @@ class MockWatcher extends StatusNotifierWatcher {
   }
 
   @override
+  Future<DBusMethodResponse> getProperty(String interface, String name) async {
+    if (interface == 'org.kde.StatusNotifierWatcher') {
+      if (name == 'ProtocolVersion') {
+        return DBusMethodSuccessResponse([DBusVariant(DBusInt32(0))]);
+      } else if (name == 'IsStatusNotifierHostRegistered') {
+        return DBusMethodSuccessResponse([DBusVariant(DBusBoolean(false))]);
+      } else if (name == 'RegisteredStatusNotifierItems') {
+        return DBusMethodSuccessResponse([
+          DBusVariant(DBusArray.string(registeredItems))
+        ]);
+      }
+    }
+    return super.getProperty(interface, name);
+  }
+
+  @override
   Future<DBusMethodResponse> getIsStatusNotifierHostRegistered() async {
     return DBusMethodSuccessResponse([DBusBoolean(false)]);
   }

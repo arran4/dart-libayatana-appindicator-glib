@@ -118,6 +118,10 @@ class AppIndicator {
   DateTime? _lastPrimaryActivateAt;
   Duration _doubleClickWindow = const Duration(milliseconds: 350);
 
+  String _manualIconThemePath = '';
+  String _iconName = '';
+  String _attentionIconName = '';
+
   AppIndicator(
       {required this.id,
       String iconName = '',
@@ -127,13 +131,14 @@ class AppIndicator {
             _AppIndicatorObject(DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
     _serviceName = _buildServiceName(id);
     _object.id = id;
-    _object.iconName = iconName;
     _object.category = category.name;
     _object.menu = _object.path; // Menu is on the same object path
     _object.iconThemePath = '';
     _object.title = '';
     _object.status = AppIndicatorStatus.passive.name;
     _object.attentionIconName = '';
+
+    this.iconName = iconName;
 
     // Connect object events to public streams
     _object.onScroll = (delta, orientation) {
@@ -225,17 +230,15 @@ class AppIndicator {
 
   set status(AppIndicatorStatus status) {
     _object.status = status.name;
+    _updateIconThemePath();
     _queueSignal(_PendingSignal.newStatus);
   }
 
-  String get iconName => _object.iconName;
+  String get iconName => _iconName;
 
   set iconName(String name) {
-    _object.iconName = name;
-    if (_looksLikePath(name)) {
-      _object.iconThemePath = File(name).parent.path;
-    }
-    _queueSignal(_PendingSignal.newIcon);
+    _iconName = name;
+    _updateIconProperties(name, isAttention: false);
   }
 
   set iconPixmaps(List<IconPixmap> pixmaps) {
@@ -243,9 +246,11 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newIcon);
   }
 
+  String get attentionIconName => _attentionIconName;
+
   set attentionIconName(String name) {
-    _object.attentionIconName = name;
-    _queueSignal(_PendingSignal.newAttentionIcon);
+    _attentionIconName = name;
+    _updateIconProperties(name, isAttention: true);
   }
 
   set overlayIconName(String name) {
@@ -307,9 +312,52 @@ class AppIndicator {
     _object.xAyatanaOrderingIndex = orderingIndex;
   }
 
+  String get iconThemePath => _object.iconThemePath;
+
   set iconThemePath(String path) {
-    _object.iconThemePath = path;
-    _queueSignal(_PendingSignal.newIconThemePath);
+    _manualIconThemePath = path;
+    _updateIconThemePath();
+  }
+
+  void _updateIconProperties(String name, {required bool isAttention}) {
+    if (isAttention) {
+      if (_looksLikePath(name)) {
+        final file = File(name);
+        _object.attentionIconName = file.uri.pathSegments.last;
+      } else {
+        _object.attentionIconName = name;
+      }
+      _queueSignal(_PendingSignal.newAttentionIcon);
+    } else {
+      if (_looksLikePath(name)) {
+        final file = File(name);
+        _object.iconName = file.uri.pathSegments.last;
+      } else {
+        _object.iconName = name;
+      }
+      _queueSignal(_PendingSignal.newIcon);
+    }
+    _updateIconThemePath();
+  }
+
+  void _updateIconThemePath() {
+    var path = _manualIconThemePath;
+
+    String relevantIcon;
+    if (status == AppIndicatorStatus.attention) {
+      relevantIcon = _attentionIconName;
+    } else {
+      relevantIcon = _iconName;
+    }
+
+    if (_looksLikePath(relevantIcon)) {
+      path = File(relevantIcon).parent.path;
+    }
+
+    if (_object.iconThemePath != path) {
+      _object.iconThemePath = path;
+      _queueSignal(_PendingSignal.newIconThemePath);
+    }
   }
 
   set windowId(int value) {
