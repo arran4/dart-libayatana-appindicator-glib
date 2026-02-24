@@ -33,6 +33,7 @@ class AppIndicator {
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
+  int? _menuGroupId;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
@@ -137,12 +138,30 @@ class AppIndicator {
   }
 
   void setMenu(List<DBusMenuItem> items) {
-    _object.menuImpl.clear();
-    _object.menuImpl.addMenu(items);
+    if (_menuGroupId == null) {
+      _menuGroupId = _object.menuImpl.addMenu(items);
+      return;
+    }
+    _object.menuImpl.setMenu(_menuGroupId!, items);
   }
 
   int addSubMenu(List<DBusMenuItem> items) {
     return _object.menuImpl.addMenu(items);
+  }
+
+  void setMenuGroup(int groupId, List<DBusMenuItem> items) {
+    _object.menuImpl.setMenu(groupId, items);
+    if (groupId == 0) {
+      _menuGroupId = groupId;
+    }
+  }
+
+  void updateMenuItems(int groupId,
+      {required int position,
+      int removeCount = 0,
+      List<DBusMenuItem> items = const <DBusMenuItem>[]}) {
+    _object.menuImpl.updateMenuItems(groupId,
+        position: position, removeCount: removeCount, items: items);
   }
 
   void setActions(List<DBusAction> actions) {

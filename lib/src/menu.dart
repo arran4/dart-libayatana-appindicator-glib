@@ -9,13 +9,36 @@ class DBusMenu extends DBusObject {
   int addMenu(List<DBusMenuItem> items) {
     var id = _nextMenuId++;
     _menus[id] = items;
-    _emitMenuChanged(id, items);
+    _emitMenuChanged(id, 0, 0, items);
     return id;
   }
 
   void setMenu(int id, List<DBusMenuItem> items) {
+    var previousItems = _menus[id] ?? const <DBusMenuItem>[];
     _menus[id] = items;
-    _emitMenuChanged(id, items);
+    _emitMenuChanged(id, 0, previousItems.length, items);
+  }
+
+  void updateMenuItems(int id,
+      {required int position,
+      int removeCount = 0,
+      List<DBusMenuItem> items = const <DBusMenuItem>[]}) {
+    var menuItems = _menus[id];
+    if (menuItems == null) {
+      throw ArgumentError('Menu group $id does not exist');
+    }
+
+    if (position < 0 || position > menuItems.length) {
+      throw RangeError.range(position, 0, menuItems.length, 'position');
+    }
+
+    if (removeCount < 0 || removeCount > menuItems.length - position) {
+      throw RangeError.range(
+          removeCount, 0, menuItems.length - position, 'removeCount');
+    }
+
+    menuItems.replaceRange(position, position + removeCount, items);
+    _emitMenuChanged(id, position, removeCount, items);
   }
 
   void clear() {
@@ -23,14 +46,15 @@ class DBusMenu extends DBusObject {
     _nextMenuId = 0;
   }
 
-  Future<void> _emitMenuChanged(int menuId, List<DBusMenuItem> items) async {
+  Future<void> _emitMenuChanged(
+      int menuId, int position, int removedCount, List<DBusMenuItem> items) async {
     await emitSignal('org.gtk.Menus', 'Changed', [
       DBusArray(DBusSignature('(uuuua(a{sv}a{sv}))'), [
         DBusStruct([
           DBusUint32(0), // group id
           DBusUint32(menuId),
-          DBusUint32(0), // position
-          DBusUint32(0), // removed count
+          DBusUint32(position),
+          DBusUint32(removedCount),
           DBusArray(DBusSignature('(a{sv}a{sv})'),
               items.map((item) => item.toDBus()).toList()),
         ])
