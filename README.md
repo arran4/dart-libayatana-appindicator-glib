@@ -78,4 +78,4 @@ GNU General Public License version 3 (GPL-3.0). See `COPYING` for details.
 ## Authors
 
 Original library by Canonical Ltd. and Robert Tari.
-Dart port by [Your Name/Entity].
+Dart port maintained by the Ayatana Indicators project (https://github.com/AyatanaIndicators).
