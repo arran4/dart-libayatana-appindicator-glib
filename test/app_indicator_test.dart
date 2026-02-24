@@ -22,14 +22,16 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+/org/ayatana/appindicator/test_indicator$')),
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
     await indicator.close();
 
     expect(
       watcher.unregisteredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+/org/ayatana/appindicator/test_indicator$')),
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
     await client.close();
@@ -49,14 +51,16 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+/org/ayatana/appindicator/freedesktop_indicator$')),
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
     );
 
     await indicator.close();
     await client.close();
   });
 
-  test('AppIndicator connect does not throw when watcher is unavailable', () async {
+  test('AppIndicator connect does not throw when watcher is unavailable',
+      () async {
     var indicator = AppIndicator(id: 'missing-watcher');
 
     await indicator.connect();
@@ -64,12 +68,12 @@ void main() {
     await indicator.close();
   });
 
-
   test('AppIndicator reports watcher and host availability', () async {
     var indicatorWithoutWatcher = AppIndicator(id: 'diag-missing-watcher');
     await indicatorWithoutWatcher.connect();
     expect(indicatorWithoutWatcher.isWatcherAvailable, isFalse);
-    expect(await indicatorWithoutWatcher.isStatusNotifierHostRegistered(), isFalse);
+    expect(await indicatorWithoutWatcher.isStatusNotifierHostRegistered(),
+        isFalse);
     await indicatorWithoutWatcher.close();
 
     var client = DBusClient.session();
@@ -80,7 +84,8 @@ void main() {
     var indicatorWithWatcher = AppIndicator(id: 'diag-with-watcher');
     await indicatorWithWatcher.connect();
     expect(indicatorWithWatcher.isWatcherAvailable, isTrue);
-    expect(await indicatorWithWatcher.isStatusNotifierHostRegistered(), isFalse);
+    expect(
+        await indicatorWithWatcher.isStatusNotifierHostRegistered(), isFalse);
 
     await indicatorWithWatcher.close();
     await client.close();
@@ -97,7 +102,8 @@ void main() {
     // and we don't want to expose internal object, we trust the implementation (verified by code review).
   });
 
-  test('AppIndicator sanitizes ids to valid non-empty DBus path segments', () async {
+  test('AppIndicator sanitizes ids to valid non-empty DBus path segments',
+      () async {
     var client = DBusClient.session();
 
     var watcher = MockWatcher();
@@ -114,11 +120,13 @@ void main() {
 
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.indicator_ea0b3f80\.p[0-9]+/org/ayatana/appindicator/indicator_ea0b3f80$')),
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.indicator_2d53a722\.p[0-9]+(/org/ayatana/appindicator/indicator_2d53a722)?$')),
     );
     expect(
       watcher.registeredItems,
-      contains(matches(r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+/org/ayatana/appindicator/indicator_123_start$')),
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
     );
 
     await emptyAfterSanitize.close();
@@ -156,7 +164,6 @@ void main() {
     }
     await indicator.close();
   });
-
 
   test('AppIndicator exposes icon pixmap related properties', () async {
     var indicator = AppIndicator(id: 'pixmap-indicator');

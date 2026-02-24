@@ -17,11 +17,16 @@ enum AppIndicatorStatus {
 extension AppIndicatorCategoryExtension on AppIndicatorCategory {
   String get name {
     switch (this) {
-      case AppIndicatorCategory.applicationStatus: return 'ApplicationStatus';
-      case AppIndicatorCategory.communications: return 'Communications';
-      case AppIndicatorCategory.systemServices: return 'SystemServices';
-      case AppIndicatorCategory.hardware: return 'Hardware';
-      case AppIndicatorCategory.other: return 'Other';
+      case AppIndicatorCategory.applicationStatus:
+        return 'ApplicationStatus';
+      case AppIndicatorCategory.communications:
+        return 'Communications';
+      case AppIndicatorCategory.systemServices:
+        return 'SystemServices';
+      case AppIndicatorCategory.hardware:
+        return 'Hardware';
+      case AppIndicatorCategory.other:
+        return 'Other';
     }
   }
 }
@@ -29,9 +34,12 @@ extension AppIndicatorCategoryExtension on AppIndicatorCategory {
 extension AppIndicatorStatusExtension on AppIndicatorStatus {
   String get name {
     switch (this) {
-      case AppIndicatorStatus.passive: return 'Passive';
-      case AppIndicatorStatus.active: return 'Active';
-      case AppIndicatorStatus.attention: return 'Attention';
+      case AppIndicatorStatus.passive:
+        return 'Passive';
+      case AppIndicatorStatus.active:
+        return 'Active';
+      case AppIndicatorStatus.attention:
+        return 'Attention';
     }
   }
 }

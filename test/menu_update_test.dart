@@ -18,7 +18,9 @@ void main() {
       sender: 'sender',
       interface: 'org.gtk.Menus',
       name: 'Start',
-      values: [DBusArray(DBusSignature('u'), [DBusUint32(0)])],
+      values: [
+        DBusArray(DBusSignature('u'), [DBusUint32(0)])
+      ],
     ));
 
     var success = response as DBusMethodSuccessResponse;
@@ -39,16 +41,17 @@ void main() {
       DBusMenuItem({'label': DBusString('C')}, {}),
     ]);
 
-    menu.updateMenuItems(id,
-        position: 1,
-        removeCount: 1,
-        items: [DBusMenuItem({'label': DBusString('X')}, {})]);
+    menu.updateMenuItems(id, position: 1, removeCount: 1, items: [
+      DBusMenuItem({'label': DBusString('X')}, {})
+    ]);
 
     var response = await menu.handleMethodCall(DBusMethodCall(
       sender: 'sender',
       interface: 'org.gtk.Menus',
       name: 'Start',
-      values: [DBusArray(DBusSignature('u'), [DBusUint32(0)])],
+      values: [
+        DBusArray(DBusSignature('u'), [DBusUint32(0)])
+      ],
     ));
 
     var success = response as DBusMethodSuccessResponse;

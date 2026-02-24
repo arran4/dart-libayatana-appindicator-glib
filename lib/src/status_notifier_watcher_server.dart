@@ -5,7 +5,10 @@ import 'package:dbus/dbus.dart';
 
 class StatusNotifierWatcher extends DBusObject {
   /// Creates a new object to expose on [path].
-  StatusNotifierWatcher({DBusObjectPath path = const DBusObjectPath.unchecked('/StatusNotifierWatcher')}) : super(path);
+  StatusNotifierWatcher(
+      {DBusObjectPath path =
+          const DBusObjectPath.unchecked('/StatusNotifierWatcher')})
+      : super(path);
 
   int protocolVersion = 0;
   bool isStatusNotifierHostRegistered = false;
@@ -18,16 +21,19 @@ class StatusNotifierWatcher extends DBusObject {
 
   /// Gets value of property org.kde.StatusNotifierWatcher.IsStatusNotifierHostRegistered
   Future<DBusMethodResponse> getIsStatusNotifierHostRegistered() async {
-    return DBusMethodSuccessResponse([DBusBoolean(isStatusNotifierHostRegistered)]);
+    return DBusMethodSuccessResponse(
+        [DBusBoolean(isStatusNotifierHostRegistered)]);
   }
 
   /// Gets value of property org.kde.StatusNotifierWatcher.RegisteredStatusNotifierItems
   Future<DBusMethodResponse> getRegisteredStatusNotifierItems() async {
-    return DBusMethodSuccessResponse([DBusArray.string(registeredStatusNotifierItems)]);
+    return DBusMethodSuccessResponse(
+        [DBusArray.string(registeredStatusNotifierItems)]);
   }
 
   /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierItem()
-  Future<DBusMethodResponse> doRegisterStatusNotifierItem(String service) async {
+  Future<DBusMethodResponse> doRegisterStatusNotifierItem(
+      String service) async {
     if (!registeredStatusNotifierItems.contains(service)) {
       registeredStatusNotifierItems.add(service);
       await emitStatusNotifierItemRegistered(service);
@@ -36,7 +42,8 @@ class StatusNotifierWatcher extends DBusObject {
   }
 
   /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierHost()
-  Future<DBusMethodResponse> doRegisterStatusNotifierHost(String service) async {
+  Future<DBusMethodResponse> doRegisterStatusNotifierHost(
+      String service) async {
     if (!isStatusNotifierHostRegistered) {
       isStatusNotifierHostRegistered = true;
       await emitStatusNotifierHostRegistered();
@@ -46,22 +53,55 @@ class StatusNotifierWatcher extends DBusObject {
 
   /// Emits signal org.kde.StatusNotifierWatcher.StatusNotifierItemRegistered
   Future<void> emitStatusNotifierItemRegistered(String service) async {
-     await emitSignal('org.kde.StatusNotifierWatcher', 'StatusNotifierItemRegistered', [DBusString(service)]);
+    await emitSignal('org.kde.StatusNotifierWatcher',
+        'StatusNotifierItemRegistered', [DBusString(service)]);
   }
 
   /// Emits signal org.kde.StatusNotifierWatcher.StatusNotifierItemUnregistered
   Future<void> emitStatusNotifierItemUnregistered(String service) async {
-     await emitSignal('org.kde.StatusNotifierWatcher', 'StatusNotifierItemUnregistered', [DBusString(service)]);
+    await emitSignal('org.kde.StatusNotifierWatcher',
+        'StatusNotifierItemUnregistered', [DBusString(service)]);
   }
 
   /// Emits signal org.kde.StatusNotifierWatcher.StatusNotifierHostRegistered
   Future<void> emitStatusNotifierHostRegistered() async {
-     await emitSignal('org.kde.StatusNotifierWatcher', 'StatusNotifierHostRegistered', []);
+    await emitSignal(
+        'org.kde.StatusNotifierWatcher', 'StatusNotifierHostRegistered', []);
   }
 
   @override
   List<DBusIntrospectInterface> introspect() {
-    return [DBusIntrospectInterface('org.kde.StatusNotifierWatcher', methods: [DBusIntrospectMethod('RegisterStatusNotifierItem', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'service')]), DBusIntrospectMethod('RegisterStatusNotifierHost', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'service')])], signals: [DBusIntrospectSignal('StatusNotifierItemRegistered', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'service')]), DBusIntrospectSignal('StatusNotifierItemUnregistered', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'service')]), DBusIntrospectSignal('StatusNotifierHostRegistered')], properties: [DBusIntrospectProperty('ProtocolVersion', DBusSignature('i'), access: DBusPropertyAccess.read), DBusIntrospectProperty('IsStatusNotifierHostRegistered', DBusSignature('b'), access: DBusPropertyAccess.read), DBusIntrospectProperty('RegisteredStatusNotifierItems', DBusSignature('as'), access: DBusPropertyAccess.read)])];
+    return [
+      DBusIntrospectInterface('org.kde.StatusNotifierWatcher', methods: [
+        DBusIntrospectMethod('RegisterStatusNotifierItem', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+              name: 'service')
+        ]),
+        DBusIntrospectMethod('RegisterStatusNotifierHost', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+              name: 'service')
+        ])
+      ], signals: [
+        DBusIntrospectSignal('StatusNotifierItemRegistered', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'service')
+        ]),
+        DBusIntrospectSignal('StatusNotifierItemUnregistered', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'service')
+        ]),
+        DBusIntrospectSignal('StatusNotifierHostRegistered')
+      ], properties: [
+        DBusIntrospectProperty('ProtocolVersion', DBusSignature('i'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty(
+            'IsStatusNotifierHostRegistered', DBusSignature('b'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty(
+            'RegisteredStatusNotifierItems', DBusSignature('as'),
+            access: DBusPropertyAccess.read)
+      ])
+    ];
   }
 
   @override
@@ -103,7 +143,8 @@ class StatusNotifierWatcher extends DBusObject {
   }
 
   @override
-  Future<DBusMethodResponse> setProperty(String interface, String name, DBusValue value) async {
+  Future<DBusMethodResponse> setProperty(
+      String interface, String name, DBusValue value) async {
     if (interface == 'org.kde.StatusNotifierWatcher') {
       if (name == 'ProtocolVersion') {
         return DBusMethodErrorResponse.propertyReadOnly();
@@ -123,9 +164,12 @@ class StatusNotifierWatcher extends DBusObject {
   Future<DBusMethodResponse> getAllProperties(String interface) async {
     var properties = <String, DBusValue>{};
     if (interface == 'org.kde.StatusNotifierWatcher') {
-      properties['ProtocolVersion'] = (await getProtocolVersion()).returnValues[0];
-      properties['IsStatusNotifierHostRegistered'] = (await getIsStatusNotifierHostRegistered()).returnValues[0];
-      properties['RegisteredStatusNotifierItems'] = (await getRegisteredStatusNotifierItems()).returnValues[0];
+      properties['ProtocolVersion'] =
+          (await getProtocolVersion()).returnValues[0];
+      properties['IsStatusNotifierHostRegistered'] =
+          (await getIsStatusNotifierHostRegistered()).returnValues[0];
+      properties['RegisteredStatusNotifierItems'] =
+          (await getRegisteredStatusNotifierItems()).returnValues[0];
     }
     return DBusMethodSuccessResponse([DBusDict.stringVariant(properties)]);
   }

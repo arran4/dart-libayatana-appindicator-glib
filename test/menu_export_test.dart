@@ -8,7 +8,8 @@ void main() {
 
     var items = [
       DBusMenuItem({'label': DBusString('Item 1')}, {}),
-      DBusMenuItem({'label': DBusString('Item 2'), 'action': DBusString('app.quit')}, {})
+      DBusMenuItem(
+          {'label': DBusString('Item 2'), 'action': DBusString('app.quit')}, {})
     ];
 
     var id = menu.addMenu(items);
@@ -17,14 +18,18 @@ void main() {
       sender: 'sender',
       interface: 'org.gtk.Menus',
       name: 'Start',
-      values: [DBusArray(DBusSignature('u'), [DBusUint32(0)])],
+      values: [
+        DBusArray(DBusSignature('u'), [DBusUint32(0)])
+      ],
     );
 
     var response = await menu.handleMethodCall(call);
 
     if (response is DBusMethodErrorResponse) {
-        var msg = response.values.isNotEmpty ? response.values.first.asString() : 'No message';
-        fail('Method call failed: ${response.errorName} - $msg');
+      var msg = response.values.isNotEmpty
+          ? response.values.first.asString()
+          : 'No message';
+      fail('Method call failed: ${response.errorName} - $msg');
     }
 
     expect(response, isA<DBusMethodSuccessResponse>());
@@ -47,6 +52,7 @@ void main() {
     var item1 = menuItems.children[0] as DBusStruct;
     var attrs1 = item1.children[0] as DBusDict;
 
-    expect(attrs1.children[DBusString('label')], DBusVariant(DBusString('Item 1')));
+    expect(attrs1.children[DBusString('label')],
+        DBusVariant(DBusString('Item 1')));
   });
 }

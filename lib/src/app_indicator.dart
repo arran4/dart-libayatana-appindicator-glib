@@ -90,10 +90,12 @@ class AppIndicatorRegistrationException implements Exception {
 class AppIndicator {
   static const List<_WatcherEndpoint> _watcherEndpoints = [
     _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/StatusNotifierWatcher'),
-    _WatcherEndpoint('org.freedesktop.StatusNotifierWatcher', '/StatusNotifierWatcher'),
-    _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/org/kde/StatusNotifierWatcher'),
     _WatcherEndpoint(
-        'org.freedesktop.StatusNotifierWatcher', '/org/freedesktop/StatusNotifierWatcher'),
+        'org.freedesktop.StatusNotifierWatcher', '/StatusNotifierWatcher'),
+    _WatcherEndpoint(
+        'org.kde.StatusNotifierWatcher', '/org/kde/StatusNotifierWatcher'),
+    _WatcherEndpoint('org.freedesktop.StatusNotifierWatcher',
+        '/org/freedesktop/StatusNotifierWatcher'),
   ];
 
   final String id;
@@ -118,16 +120,19 @@ class AppIndicator {
   DateTime? _lastPrimaryActivateAt;
   Duration _doubleClickWindow = const Duration(milliseconds: 350);
 
+  String _manualIconThemePath = '';
+  String _iconName = '';
+  String _attentionIconName = '';
+
   AppIndicator(
       {required this.id,
       String iconName = '',
       AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
       : _client = DBusClient.session(),
-        _object =
-            _AppIndicatorObject(DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
+        _object = _AppIndicatorObject(
+            DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
     _serviceName = _buildServiceName(id);
     _object.id = id;
-    _object.iconName = iconName;
     _object.category = category.name;
     _object.menu = _object.path; // Menu is on the same object path
     _object.iconThemePath = '';
@@ -135,13 +140,15 @@ class AppIndicator {
     _object.status = AppIndicatorStatus.passive.name;
     _object.attentionIconName = '';
 
+    this.iconName = iconName;
+
     // Connect object events to public streams
     _object.onScroll = (delta, orientation) {
-        _scrollController.add(ScrollEvent(delta, orientation));
+      _scrollController.add(ScrollEvent(delta, orientation));
     };
 
     _object.onSecondaryActivate = (x, y) {
-        _secondaryActivateController.add(SecondaryActivateEvent(x, y));
+      _secondaryActivateController.add(SecondaryActivateEvent(x, y));
     };
 
     _object.onXAyatanaSecondaryActivate = (timestamp) {
@@ -169,7 +176,9 @@ class AppIndicator {
 
   static String _cleanId(String id) {
     final sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-    final collapsed = sanitized.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_+|_+$'), '');
+    final collapsed = sanitized
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
 
     if (collapsed.isEmpty) {
       return 'indicator_${_stableHash(id)}';
@@ -225,17 +234,15 @@ class AppIndicator {
 
   set status(AppIndicatorStatus status) {
     _object.status = status.name;
+    _updateIconThemePath();
     _queueSignal(_PendingSignal.newStatus);
   }
 
-  String get iconName => _object.iconName;
+  String get iconName => _iconName;
 
   set iconName(String name) {
-    _object.iconName = name;
-    if (_looksLikePath(name)) {
-      _object.iconThemePath = File(name).parent.path;
-    }
-    _queueSignal(_PendingSignal.newIcon);
+    _iconName = name;
+    _updateIconProperties(name, isAttention: false);
   }
 
   set iconPixmaps(List<IconPixmap> pixmaps) {
@@ -243,9 +250,11 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newIcon);
   }
 
+  String get attentionIconName => _attentionIconName;
+
   set attentionIconName(String name) {
-    _object.attentionIconName = name;
-    _queueSignal(_PendingSignal.newAttentionIcon);
+    _attentionIconName = name;
+    _updateIconProperties(name, isAttention: true);
   }
 
   set overlayIconName(String name) {
@@ -307,9 +316,52 @@ class AppIndicator {
     _object.xAyatanaOrderingIndex = orderingIndex;
   }
 
+  String get iconThemePath => _object.iconThemePath;
+
   set iconThemePath(String path) {
-    _object.iconThemePath = path;
-    _queueSignal(_PendingSignal.newIconThemePath);
+    _manualIconThemePath = path;
+    _updateIconThemePath();
+  }
+
+  void _updateIconProperties(String name, {required bool isAttention}) {
+    if (isAttention) {
+      if (_looksLikePath(name)) {
+        final file = File(name);
+        _object.attentionIconName = file.uri.pathSegments.last;
+      } else {
+        _object.attentionIconName = name;
+      }
+      _queueSignal(_PendingSignal.newAttentionIcon);
+    } else {
+      if (_looksLikePath(name)) {
+        final file = File(name);
+        _object.iconName = file.uri.pathSegments.last;
+      } else {
+        _object.iconName = name;
+      }
+      _queueSignal(_PendingSignal.newIcon);
+    }
+    _updateIconThemePath();
+  }
+
+  void _updateIconThemePath() {
+    var path = _manualIconThemePath;
+
+    String relevantIcon;
+    if (status == AppIndicatorStatus.attention) {
+      relevantIcon = _attentionIconName;
+    } else {
+      relevantIcon = _iconName;
+    }
+
+    if (_looksLikePath(relevantIcon)) {
+      path = File(relevantIcon).parent.path;
+    }
+
+    if (_object.iconThemePath != path) {
+      _object.iconThemePath = path;
+      _queueSignal(_PendingSignal.newIconThemePath);
+    }
   }
 
   set windowId(int value) {
@@ -393,7 +445,8 @@ class AppIndicator {
   Stream<SecondaryActivateEvent> get secondaryActivateEvents =>
       _secondaryActivateController.stream;
   Stream<ActivateEvent> get activateEvents => _activateController.stream;
-  Stream<ContextMenuEvent> get contextMenuEvents => _contextMenuController.stream;
+  Stream<ContextMenuEvent> get contextMenuEvents =>
+      _contextMenuController.stream;
   Stream<XAyatanaActivateEvent> get xAyatanaActivateEvents =>
       _xAyatanaActivateController.stream;
 
@@ -409,7 +462,8 @@ class AppIndicator {
     await _object.doContextMenu(x, y);
   }
 
-  Future<void> dispatchScroll({required int delta, required String orientation}) async {
+  Future<void> dispatchScroll(
+      {required int delta, required String orientation}) async {
     await _object.doScroll(delta, orientation);
   }
 
@@ -468,8 +522,6 @@ class AppIndicator {
     // on D-Bus and return without throwing.
     _watcher = null;
   }
-
-
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
     final registrationTargets = <String>[
@@ -571,7 +623,8 @@ class AppIndicator {
       case _PendingSignal.newAttentionIcon:
         return _object.emitNewAttentionIcon();
       case _PendingSignal.newOverlayIcon:
-        return _object.emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
+        return _object
+            .emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
       case _PendingSignal.newTitle:
         return _object.emitNewTitle();
       case _PendingSignal.newLabel:
@@ -582,7 +635,8 @@ class AppIndicator {
       case _PendingSignal.newToolTip:
         return _object.emitNewToolTip();
       case _PendingSignal.newAttentionMovie:
-        return _object.emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
+        return _object
+            .emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
     }
   }
 }
@@ -705,14 +759,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
     ]);
   }
 
-
   Future<DBusMethodResponse> getWindowId() async =>
       DBusMethodSuccessResponse([DBusUint32(windowId)]);
 
   Future<DBusMethodResponse> getItemIsMenu() async =>
       DBusMethodSuccessResponse([DBusBoolean(itemIsMenu)]);
 
-  Future<DBusMethodResponse> getIconPixmap() async => DBusMethodSuccessResponse([
+  Future<DBusMethodResponse> getIconPixmap() async =>
+      DBusMethodSuccessResponse([
         DBusArray(
           DBusSignature('(iiay)'),
           iconPixmaps.map((frame) => frame.toDBus()).toList(),
@@ -727,14 +781,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
         ),
       ]);
 
-
   Future<DBusMethodResponse> getOverlayIconName() async =>
       DBusMethodSuccessResponse([DBusString(overlayIconName)]);
 
   Future<DBusMethodResponse> getOverlayIconAccessibleDesc() async =>
       DBusMethodSuccessResponse([DBusString(overlayAccessibleDesc)]);
 
-  Future<DBusMethodResponse> getOverlayIconPixmap() async => DBusMethodSuccessResponse([
+  Future<DBusMethodResponse> getOverlayIconPixmap() async =>
+      DBusMethodSuccessResponse([
         DBusArray(
           DBusSignature('(iiay)'),
           overlayIconPixmaps.map((frame) => frame.toDBus()).toList(),
@@ -761,7 +815,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
   @override
   Future<DBusMethodResponse> doXAyatanaSecondaryActivate(int timestamp) async {
     _handleSecondaryAction();
-    if (onXAyatanaSecondaryActivate != null) onXAyatanaSecondaryActivate!(timestamp);
+    if (onXAyatanaSecondaryActivate != null)
+      onXAyatanaSecondaryActivate!(timestamp);
     return DBusMethodSuccessResponse([]);
   }
 
@@ -776,7 +831,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
     return DBusMethodSuccessResponse([]);
   }
 
-  Future<DBusMethodResponse> doXAyatanaActivate(int x, int y, int timestamp) async {
+  Future<DBusMethodResponse> doXAyatanaActivate(
+      int x, int y, int timestamp) async {
     _handlePrimaryAction();
     onXAyatanaActivate?.call(x, y, timestamp);
     return DBusMethodSuccessResponse([]);
@@ -821,22 +877,28 @@ class _AppIndicatorObject extends StatusNotifierItem {
       DBusIntrospectMethod(
         'Activate',
         args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y'),
         ],
       ),
       DBusIntrospectMethod(
         'ContextMenu',
         args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y'),
         ],
       ),
       DBusIntrospectMethod(
         'XAyatanaActivate',
         args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y'),
           DBusIntrospectArgument(
             DBusSignature('u'),
             DBusArgumentDirection.in_,
@@ -845,7 +907,6 @@ class _AppIndicatorObject extends StatusNotifierItem {
         ],
       ),
     ]);
-
 
     statusInterface.properties.addAll([
       DBusIntrospectProperty('WindowId', DBusSignature('u'),
@@ -878,13 +939,15 @@ class _AppIndicatorObject extends StatusNotifierItem {
         if (methodCall.signature != DBusSignature('ii')) {
           return DBusMethodErrorResponse.invalidArgs();
         }
-        return doActivate(methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+        return doActivate(
+            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
       }
       if (methodCall.name == 'ContextMenu') {
         if (methodCall.signature != DBusSignature('ii')) {
           return DBusMethodErrorResponse.invalidArgs();
         }
-        return doContextMenu(methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+        return doContextMenu(
+            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
       }
       if (methodCall.name == 'XAyatanaActivate') {
         if (methodCall.signature != DBusSignature('iiu')) {
@@ -904,7 +967,6 @@ class _AppIndicatorObject extends StatusNotifierItem {
     }
     return DBusMethodErrorResponse.unknownInterface();
   }
-
 
   @override
   Future<DBusMethodResponse> getProperty(String interface, String name) async {
@@ -939,8 +1001,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
       return response;
     }
 
-    final dict =
-        Map<String, DBusValue>.from(response.returnValues[0].asStringVariantDict());
+    final dict = Map<String, DBusValue>.from(
+        response.returnValues[0].asStringVariantDict());
     dict['WindowId'] = (await getWindowId()).returnValues[0];
     dict['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
     dict['IconPixmap'] = (await getIconPixmap()).returnValues[0];
@@ -950,8 +1012,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
     dict['OverlayIconAccessibleDesc'] =
         (await getOverlayIconAccessibleDesc()).returnValues[0];
     dict['OverlayIconPixmap'] = (await getOverlayIconPixmap()).returnValues[0];
-    dict['AttentionMovieName'] = (await getAttentionMovieName()).returnValues[0];
+    dict['AttentionMovieName'] =
+        (await getAttentionMovieName()).returnValues[0];
     return DBusMethodSuccessResponse([DBusDict.stringVariant(dict)]);
   }
-
 }

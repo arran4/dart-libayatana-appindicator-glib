@@ -78,7 +78,8 @@ void main() {
 
     var response = await group.handleMethodCall(describeCall);
     expect(response, isA<DBusMethodSuccessResponse>());
-    var result = (response as DBusMethodSuccessResponse).returnValues[0] as DBusStruct;
+    var result =
+        (response as DBusMethodSuccessResponse).returnValues[0] as DBusStruct;
 
     expect(result.children[0], DBusBoolean(false));
     var stateArray = result.children[2] as DBusArray;

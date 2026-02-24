@@ -46,8 +46,8 @@ class DBusMenu extends DBusObject {
     _nextMenuId = 0;
   }
 
-  Future<void> _emitMenuChanged(
-      int menuId, int position, int removedCount, List<DBusMenuItem> items) async {
+  Future<void> _emitMenuChanged(int menuId, int position, int removedCount,
+      List<DBusMenuItem> items) async {
     await emitSignal('org.gtk.Menus', 'Changed', [
       DBusArray(DBusSignature('(uuuua(a{sv}a{sv}))'), [
         DBusStruct([
@@ -69,20 +69,24 @@ class DBusMenu extends DBusObject {
         'org.gtk.Menus',
         methods: [
           DBusIntrospectMethod('Start', args: [
-            DBusIntrospectArgument(DBusSignature('au'),
-                DBusArgumentDirection.in_, name: 'groups'),
-            DBusIntrospectArgument(DBusSignature('a(uua(a{sv}a{sv}))'),
-                DBusArgumentDirection.out, name: 'state')
+            DBusIntrospectArgument(
+                DBusSignature('au'), DBusArgumentDirection.in_,
+                name: 'groups'),
+            DBusIntrospectArgument(
+                DBusSignature('a(uua(a{sv}a{sv}))'), DBusArgumentDirection.out,
+                name: 'state')
           ]),
           DBusIntrospectMethod('End', args: [
-            DBusIntrospectArgument(DBusSignature('au'),
-                DBusArgumentDirection.in_, name: 'groups')
+            DBusIntrospectArgument(
+                DBusSignature('au'), DBusArgumentDirection.in_,
+                name: 'groups')
           ]),
         ],
         signals: [
           DBusIntrospectSignal('Changed', args: [
             DBusIntrospectArgument(DBusSignature('a(uuuua(a{sv}a{sv}))'),
-                DBusArgumentDirection.out, name: 'changes'),
+                DBusArgumentDirection.out,
+                name: 'changes'),
           ]),
         ],
       ),
@@ -123,8 +127,8 @@ class DBusMenu extends DBusObject {
       menusList.add(DBusStruct([
         DBusUint32(0), // Group ID
         DBusUint32(menuId),
-        DBusArray(
-            DBusSignature('(a{sv}a{sv})'), items.map((item) => item.toDBus()).toList()),
+        DBusArray(DBusSignature('(a{sv}a{sv})'),
+            items.map((item) => item.toDBus()).toList()),
       ]));
     }
 
