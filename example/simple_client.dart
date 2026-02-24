@@ -14,61 +14,145 @@ Future<void> main() async {
   indicator
     ..status = AppIndicatorStatus.active
     ..title = 'Ayatana AppIndicator Dart Showcase'
-    ..label = '0%'
+    ..label = '1%'
     ..labelGuide = '100%'
-    ..tooltipTitle = 'Dart-native AppIndicator'
-    ..tooltipDescription = 'Left click, middle click, right click and scroll to interact.'
-    ..iconThemePath = Platform.script.resolve('assets').toFilePath();
+    ..windowId = 0
+    ..tooltipTitle = 'Pure Dart AppIndicator'
+    ..tooltipDescription = 'Left click, middle click, right click, double click and scroll.'
+    ..iconThemePath = Platform.script.resolve('assets').toFilePath()
+    ..iconPixmaps = const [
+      IconPixmap(
+        width: 1,
+        height: 1,
+        argb32Bytes: [0xff, 0x22, 0x8b, 0x22],
+      ),
+    ]
+    ..attentionIconPixmaps = const [
+      IconPixmap(
+        width: 1,
+        height: 1,
+        argb32Bytes: [0xff, 0xcc, 0x33, 0x33],
+      ),
+    ];
 
-  var percentage = 0;
+  var percentage = 1;
   var showLabel = true;
-  var blink = false;
+  var attentionActive = false;
+  var item3Enabled = true;
+  var localIconMode = false;
   var lastPrimaryClick = DateTime.fromMillisecondsSinceEpoch(0);
 
   late Timer heartbeat;
+  late int submenuId;
 
-  void log(String message) {
-    stdout.writeln('[showcase] $message');
+  void log(String message) => stdout.writeln('[showcase] $message');
+
+  void updateLabel() {
+    indicator.label = showLabel ? '$percentage%' : '';
   }
 
   final actions = <DBusAction>[
     DBusAction(
-      'primary_toggle_attention',
+      'item_1',
+      onActivate: (_) => log('Menu item 1 clicked.'),
+    ),
+    DBusAction(
+      'item_2',
+      onActivate: (_) => log('Menu item 2 clicked.'),
+    ),
+    DBusAction(
+      'toggle_item_3',
       onActivate: (_) {
-        blink = !blink;
-        indicator.status = blink
-            ? AppIndicatorStatus.attention
-            : AppIndicatorStatus.active;
-        log('Primary click toggled attention mode: $blink');
+        item3Enabled = !item3Enabled;
+        indicator.setMenuGroup(submenuId, [
+          DBusMenuItem(
+            {
+              'label': DBusString('Sub 2 (toggles Sub 1 sensitivity)'),
+              'action': DBusString('app.toggle_sub_1'),
+            },
+            {},
+          ),
+          DBusMenuItem(
+            {
+              'label': DBusString(item3Enabled ? 'Sub 1 (enabled)' : 'Sub 1 (disabled)'),
+              'action': DBusString('app.sub_1'),
+              'enabled': DBusBoolean(item3Enabled),
+            },
+            {},
+          ),
+          DBusMenuItem(
+            {
+              'label': DBusString('Sub 3'),
+              'action': DBusString('app.sub_3'),
+            },
+            {},
+          ),
+        ]);
       },
     ),
     DBusAction(
-      'secondary_toggle_label',
+      'sub_1',
+      onActivate: (_) => log('Sub 1 clicked.'),
+    ),
+    DBusAction(
+      'toggle_sub_1',
+      onActivate: (_) => log('Sub 2 clicked. Sub 1 enable state toggled from parent action.'),
+    ),
+    DBusAction(
+      'sub_3',
+      onActivate: (_) => log('Sub 3 clicked.'),
+    ),
+    DBusAction(
+      'toggle_attention',
+      onActivate: (_) {
+        attentionActive = !attentionActive;
+        indicator.status =
+            attentionActive ? AppIndicatorStatus.attention : AppIndicatorStatus.active;
+        indicator.tooltipDescription = attentionActive
+            ? 'Attention mode enabled.'
+            : 'Attention mode disabled.';
+      },
+    ),
+    DBusAction(
+      'toggle_label',
       onActivate: (_) {
         showLabel = !showLabel;
-        indicator.label = showLabel ? '$percentage%' : '';
-        log('Secondary click toggled label visibility: $showLabel');
+        updateLabel();
+      },
+    ),
+    DBusAction(
+      'toggle_icon_source',
+      onActivate: (_) {
+        localIconMode = !localIconMode;
+        indicator.iconName = localIconMode ? 'demo-indicator' : 'indicator-messages';
+        indicator.tooltipDescription =
+            localIconMode ? 'Using bundled local icon.' : 'Using system theme icon.';
       },
     ),
     DBusAction(
       'double_click_reset_progress',
       onActivate: (_) {
         percentage = 0;
-        indicator.label = showLabel ? '$percentage%' : '';
+        updateLabel();
         indicator.tooltipDescription = 'Progress reset via double-click.';
-        log('Double click reset progress to 0%.');
       },
     ),
     DBusAction(
-      'toggle_status',
+      'primary_toggle_attention',
       onActivate: (_) {
-        indicator.status = indicator.status == AppIndicatorStatus.passive
-            ? AppIndicatorStatus.active
-            : AppIndicatorStatus.passive;
+        attentionActive = !attentionActive;
+        indicator.status =
+            attentionActive ? AppIndicatorStatus.attention : AppIndicatorStatus.active;
+      },
+    ),
+    DBusAction(
+      'secondary_toggle_label',
+      onActivate: (_) {
+        showLabel = !showLabel;
+        updateLabel();
       },
     ),
     DBusAction('quit', onActivate: (_) async {
-      log('Quit requested. Closing indicator...');
       heartbeat.cancel();
       await indicator.close();
       exit(0);
@@ -81,15 +165,39 @@ Future<void> main() async {
     ..setSecondaryActivateTarget('secondary_toggle_label')
     ..setDoubleClickTarget('double_click_reset_progress');
 
-  final submenuId = indicator.addSubMenu([
-    DBusMenuItem({'label': DBusString('Sub Action A')}, {}),
-    DBusMenuItem({'label': DBusString('Sub Action B')}, {}),
+  submenuId = indicator.addSubMenu([
+    DBusMenuItem(
+      {
+        'label': DBusString('Sub 1 (enabled)'),
+        'action': DBusString('app.sub_1'),
+        'enabled': DBusBoolean(true),
+      },
+      {},
+    ),
+    DBusMenuItem(
+      {
+        'label': DBusString('Sub 2 (toggles Sub 1 sensitivity)'),
+        'action': DBusString('app.toggle_sub_1'),
+      },
+      {},
+    ),
+    DBusMenuItem(
+      {
+        'label': DBusString('Sub 3'),
+        'action': DBusString('app.sub_3'),
+      },
+      {},
+    ),
   ]);
 
   indicator.setMenu([
-    DBusMenuItem({'label': DBusString('Toggle Passive/Active'), 'action': DBusString('app.toggle_status')}, {}),
-    DBusMenuItem({'label': DBusString('Reset via Double Click'), 'action': DBusString('app.double_click_reset_progress')}, {}),
+    DBusMenuItem({'label': DBusString('Item 1'), 'action': DBusString('app.item_1')}, {}),
+    DBusMenuItem({'label': DBusString('Item 2'), 'action': DBusString('app.item_2')}, {}),
     DBusMenuItem({'label': DBusString('Submenu')}, {'submenu': DBusUint32(submenuId)}),
+    DBusMenuItem({'label': DBusString('Toggle Attention'), 'action': DBusString('app.toggle_attention')}, {}),
+    DBusMenuItem({'label': DBusString('Toggle Label'), 'action': DBusString('app.toggle_label')}, {}),
+    DBusMenuItem({'label': DBusString('Toggle Submenu Item State'), 'action': DBusString('app.toggle_item_3')}, {}),
+    DBusMenuItem({'label': DBusString('Toggle Icon Source'), 'action': DBusString('app.toggle_icon_source')}, {}),
     DBusMenuItem({'label': DBusString('Quit'), 'action': DBusString('app.quit')}, {}),
   ]);
 
@@ -97,40 +205,33 @@ Future<void> main() async {
     final now = DateTime.now();
     final elapsed = now.difference(lastPrimaryClick).inMilliseconds;
     lastPrimaryClick = now;
-    log('Primary activation at (${event.x}, ${event.y}), delta=${elapsed}ms');
+    log('Primary activation @(${event.x}, ${event.y}) delta=${elapsed}ms');
   });
 
   indicator.secondaryActivateEvents.listen((event) {
-    log('Secondary activation at (${event.x}, ${event.y}) timestamp=${event.timestamp}');
+    log('Secondary activation @(${event.x}, ${event.y}) ts=${event.timestamp}');
   });
 
   indicator.contextMenuEvents.listen((event) {
-    log('Context menu requested at (${event.x}, ${event.y})');
+    log('Context menu @(${event.x}, ${event.y})');
   });
 
   indicator.scrollEvents.listen((event) {
     percentage = (percentage + event.delta).clamp(0, 100);
-    indicator.label = showLabel ? '$percentage%' : '';
-    indicator.tooltipDescription =
-        'Progress adjusted by scroll (${event.orientation}): $percentage%';
-    log('Scroll event delta=${event.delta}, orientation=${event.orientation}, progress=$percentage');
+    updateLabel();
   });
 
   await indicator.connect();
 
   if (!indicator.isWatcherAvailable) {
-    print('Indicator exported on D-Bus, but no StatusNotifierWatcher is available.');
-    print('No icon will be shown until an indicator host/watcher is running.');
+    log('No StatusNotifierWatcher is available on session bus.');
   } else if (!await indicator.isStatusNotifierHostRegistered()) {
-    print('Indicator registered with watcher, but no StatusNotifierHost is registered.');
-    print('Ensure your desktop environment has an AppIndicator/SNI host enabled.');
+    log('Watcher found but no StatusNotifierHost registered.');
   }
 
-  log('Indicator connected. Use Ctrl+C to exit.');
-
-  heartbeat = Timer.periodic(const Duration(seconds: 2), (_) {
+  heartbeat = Timer.periodic(const Duration(seconds: 1), (_) {
     percentage = (percentage + 1) % 101;
-    indicator.label = showLabel ? '$percentage%' : '';
+    updateLabel();
   });
 
   await Completer<void>().future;

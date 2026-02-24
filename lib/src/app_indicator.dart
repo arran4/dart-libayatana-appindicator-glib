@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:dbus/dbus.dart';
 
 import 'action_group.dart';
@@ -44,6 +45,27 @@ class ContextMenuEvent {
   const ContextMenuEvent(this.x, this.y);
 }
 
+/// One icon frame encoded as ARGB32 bytes for the SNI pixmap properties.
+class IconPixmap {
+  final int width;
+  final int height;
+  final List<int> argb32Bytes;
+
+  const IconPixmap({
+    required this.width,
+    required this.height,
+    required this.argb32Bytes,
+  });
+
+  DBusStruct toDBus() {
+    return DBusStruct([
+      DBusInt32(width),
+      DBusInt32(height),
+      DBusArray.byte(argb32Bytes),
+    ]);
+  }
+}
+
 /// Event arguments for XAyatana primary activation.
 class XAyatanaActivateEvent {
   final int x;
@@ -75,10 +97,12 @@ class AppIndicator {
   ];
 
   final String id;
+  late final String _serviceName;
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
   int? _menuGroupId;
+  String? _registeredItemId;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
@@ -101,6 +125,7 @@ class AppIndicator {
       : _client = DBusClient.session(),
         _object =
             _AppIndicatorObject(DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
+    _serviceName = _buildServiceName(id);
     _object.id = id;
     _object.iconName = iconName;
     _object.category = category.name;
@@ -167,6 +192,11 @@ class AppIndicator {
     return hash.toRadixString(16).padLeft(8, '0');
   }
 
+  static String _buildServiceName(String id) {
+    final cleaned = _cleanId(id).toLowerCase();
+    return 'org.ayatana.appindicator.$cleaned.$pid';
+  }
+
   // Properties setters
   AppIndicatorStatus get status {
     switch (_object.status) {
@@ -192,8 +222,18 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newIcon);
   }
 
+  set iconPixmaps(List<IconPixmap> pixmaps) {
+    _object.iconPixmaps = pixmaps;
+    _queueSignal(_PendingSignal.newIcon);
+  }
+
   set attentionIconName(String name) {
     _object.attentionIconName = name;
+    _queueSignal(_PendingSignal.newAttentionIcon);
+  }
+
+  set attentionIconPixmaps(List<IconPixmap> pixmaps) {
+    _object.attentionIconPixmaps = pixmaps;
     _queueSignal(_PendingSignal.newAttentionIcon);
   }
 
@@ -235,6 +275,14 @@ class AppIndicator {
   set iconThemePath(String path) {
     _object.iconThemePath = path;
     _queueSignal(_PendingSignal.newIconThemePath);
+  }
+
+  set windowId(int value) {
+    _object.windowId = value;
+  }
+
+  set itemIsMenu(bool value) {
+    _object.itemIsMenu = value;
   }
 
   // Tooltip properties
@@ -354,8 +402,8 @@ class AppIndicator {
   }
 
   Future<void> connect() async {
-
     await _client.registerObject(_object);
+    await _client.requestName(_serviceName);
     _isConnected = true;
     await _flushPendingSignals();
 
@@ -369,7 +417,7 @@ class AppIndicator {
       try {
         // Probe before registering so we can support backends on different names/paths.
         await candidate.getProtocolVersion();
-        await candidate.callRegisterStatusNotifierItem(_object.path.toString());
+        await _registerWithWatcher(candidate);
         _watcher = candidate;
         return;
       } catch (error, stackTrace) {
@@ -386,6 +434,30 @@ class AppIndicator {
     _watcher = null;
   }
 
+
+
+  Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
+    final registrationTargets = <String>[
+      _serviceName,
+      '$_serviceName${_object.path}',
+      _object.path.toString(),
+    ];
+
+    Object? lastError;
+    for (final target in registrationTargets) {
+      try {
+        await watcher.callRegisterStatusNotifierItem(target);
+        _registeredItemId = target;
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError != null) {
+      throw lastError;
+    }
+  }
 
   bool _isWatcherUnavailable(Object error) {
     if (error is DBusMethodResponseException) {
@@ -407,7 +479,7 @@ class AppIndicator {
         await _watcher!.callMethod(
             'org.kde.StatusNotifierWatcher',
             'UnregisterStatusNotifierItem',
-            [DBusString(_object.path.toString())],
+            [DBusString(_registeredItemId ?? _object.path.toString())],
             replySignature: DBusSignature(''));
       } catch (_) {
         // Fallback behavior for protocol variants without unregister support:
@@ -506,6 +578,11 @@ class _AppIndicatorObject extends StatusNotifierItem {
   String? primaryActivateTarget;
   String? doubleClickTarget;
 
+  int windowId = 0;
+  bool itemIsMenu = false;
+  List<IconPixmap> iconPixmaps = const <IconPixmap>[];
+  List<IconPixmap> attentionIconPixmaps = const <IconPixmap>[];
+
   Function(int, String)? onScroll;
   Function(int, int)? onSecondaryActivate;
   Function(int)? onXAyatanaSecondaryActivate;
@@ -582,6 +659,28 @@ class _AppIndicatorObject extends StatusNotifierItem {
       ])
     ]);
   }
+
+
+  Future<DBusMethodResponse> getWindowId() async =>
+      DBusMethodSuccessResponse([DBusUint32(windowId)]);
+
+  Future<DBusMethodResponse> getItemIsMenu() async =>
+      DBusMethodSuccessResponse([DBusBoolean(itemIsMenu)]);
+
+  Future<DBusMethodResponse> getIconPixmap() async => DBusMethodSuccessResponse([
+        DBusArray(
+          DBusSignature('(iiay)'),
+          iconPixmaps.map((frame) => frame.toDBus()).toList(),
+        ),
+      ]);
+
+  Future<DBusMethodResponse> getAttentionIconPixmap() async =>
+      DBusMethodSuccessResponse([
+        DBusArray(
+          DBusSignature('(iiay)'),
+          attentionIconPixmaps.map((frame) => frame.toDBus()).toList(),
+        ),
+      ]);
 
   // Methods implementation
   @override
@@ -685,6 +784,18 @@ class _AppIndicatorObject extends StatusNotifierItem {
       ),
     ]);
 
+
+    statusInterface.properties.addAll([
+      DBusIntrospectProperty('WindowId', DBusSignature('u'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('ItemIsMenu', DBusSignature('b'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('IconPixmap', DBusSignature('a(iiay)'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
+          access: DBusPropertyAccess.read),
+    ]);
+
     interfaces.addAll(menuImpl.introspect());
     interfaces.addAll(actionGroupImpl.introspect());
     return interfaces;
@@ -723,4 +834,40 @@ class _AppIndicatorObject extends StatusNotifierItem {
     }
     return DBusMethodErrorResponse.unknownInterface();
   }
+
+
+  @override
+  Future<DBusMethodResponse> getProperty(String interface, String name) async {
+    if (interface == 'org.kde.StatusNotifierItem') {
+      switch (name) {
+        case 'WindowId':
+          return getWindowId();
+        case 'ItemIsMenu':
+          return getItemIsMenu();
+        case 'IconPixmap':
+          return getIconPixmap();
+        case 'AttentionIconPixmap':
+          return getAttentionIconPixmap();
+      }
+    }
+
+    return super.getProperty(interface, name);
+  }
+
+  @override
+  Future<DBusMethodResponse> getAllProperties(String interface) async {
+    final response = await super.getAllProperties(interface);
+    if (interface != 'org.kde.StatusNotifierItem') {
+      return response;
+    }
+
+    final dict = response.returnValues[0].asStringVariantDict().toMap();
+    dict['WindowId'] = (await getWindowId()).returnValues[0];
+    dict['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
+    dict['IconPixmap'] = (await getIconPixmap()).returnValues[0];
+    dict['AttentionIconPixmap'] =
+        (await getAttentionIconPixmap()).returnValues[0];
+    return DBusMethodSuccessResponse([DBusDict.stringVariant(dict)]);
+  }
+
 }
