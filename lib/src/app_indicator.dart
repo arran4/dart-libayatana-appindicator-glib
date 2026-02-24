@@ -30,21 +30,32 @@ class SecondaryActivateEvent {
 
 class AppIndicator {
   final String id;
-  final DBusClient _client;
   final _AppIndicatorObject _object;
+  late DBusClient _client;
   StatusNotifierWatcher? _watcher;
+  final bool autoReconnect;
+
+  StreamSubscription<DBusNameOwnerChangedEvent>? _nameOwnerChangedSubscription;
+  StreamSubscription<String>? _nameLostSubscription;
+
+  bool _isClosed = false;
+  bool _isObjectExported = false;
+  bool _isReconnecting = false;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
-  final _secondaryActivateController = StreamController<SecondaryActivateEvent>.broadcast();
+  final _secondaryActivateController =
+      StreamController<SecondaryActivateEvent>.broadcast();
 
   AppIndicator(
       {required this.id,
       String iconName = '',
-      AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
-      : _client = DBusClient.session(),
-        _object = _AppIndicatorObject(DBusObjectPath(
-            '/org/ayatana/appindicator/${_cleanId(id)}')) {
+      AppIndicatorCategory category = AppIndicatorCategory.applicationStatus,
+      this.autoReconnect = false})
+      : _object = _AppIndicatorObject(
+            DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
+    _client = DBusClient.session();
+
     _object.id = id;
     _object.iconName = iconName;
     _object.category = category.name;
@@ -56,15 +67,15 @@ class AppIndicator {
 
     // Connect object events to public streams
     _object.onScroll = (delta, orientation) {
-        _scrollController.add(ScrollEvent(delta, orientation));
+      _scrollController.add(ScrollEvent(delta, orientation));
     };
 
     _object.onSecondaryActivate = (x, y) {
-        _secondaryActivateController.add(SecondaryActivateEvent(x, y));
+      _secondaryActivateController.add(SecondaryActivateEvent(x, y));
     };
 
     _object.onXAyatanaSecondaryActivate = (timestamp) {
-        _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
+      _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
     };
   }
 
@@ -122,18 +133,18 @@ class AppIndicator {
 
   // Tooltip properties
   set tooltipIconName(String name) {
-      _object.toolTipIconName = name;
-      _object.emitNewToolTip();
+    _object.toolTipIconName = name;
+    _object.emitNewToolTip();
   }
 
   set tooltipTitle(String title) {
-      _object.toolTipTitle = title;
-      _object.emitNewToolTip();
+    _object.toolTipTitle = title;
+    _object.emitNewToolTip();
   }
 
   set tooltipDescription(String description) {
-      _object.toolTipDescription = description;
-      _object.emitNewToolTip();
+    _object.toolTipDescription = description;
+    _object.emitNewToolTip();
   }
 
   void setMenu(List<DBusMenuItem> items) {
@@ -158,18 +169,36 @@ class AppIndicator {
 
   // Events
   Stream<ScrollEvent> get scrollEvents => _scrollController.stream;
-  Stream<SecondaryActivateEvent> get secondaryActivateEvents => _secondaryActivateController.stream;
+  Stream<SecondaryActivateEvent> get secondaryActivateEvents =>
+      _secondaryActivateController.stream;
 
   Future<void> connect() async {
+    await _exportObjectIfNeeded();
+    _listenForBusEvents();
+    await _registerWithWatcher();
+  }
+
+  void _listenForBusEvents() {
+    _nameOwnerChangedSubscription ??=
+        _client.nameOwnerChanged.listen(_onNameOwnerChanged);
+    _nameLostSubscription ??= _client.nameLost.listen(_onNameLost);
+  }
+
+  Future<void> _exportObjectIfNeeded() async {
+    if (_isObjectExported) {
+      return;
+    }
+
     await _client.registerObject(_object);
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
+    _isObjectExported = true;
+  }
 
-    // Connect to watcher
+  Future<void> _registerWithWatcher() async {
     _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
         path: DBusObjectPath('/StatusNotifierWatcher'));
 
-    // Register
     try {
       await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
     } catch (e) {
@@ -177,7 +206,55 @@ class AppIndicator {
     }
   }
 
+  void _onNameOwnerChanged(DBusNameOwnerChangedEvent event) {
+    if (_isClosed || event.name != 'org.kde.StatusNotifierWatcher') {
+      return;
+    }
+
+    if (event.newOwner != null && autoReconnect) {
+      unawaited(_recoverAndRegister());
+    }
+  }
+
+  void _onNameLost(String name) {
+    if (_isClosed || !autoReconnect || name != _client.uniqueName) {
+      return;
+    }
+
+    unawaited(_recoverAndRegister());
+  }
+
+  Future<void> _recoverAndRegister() async {
+    if (_isReconnecting || _isClosed) {
+      return;
+    }
+
+    _isReconnecting = true;
+    try {
+      await _nameOwnerChangedSubscription?.cancel();
+      await _nameLostSubscription?.cancel();
+      _nameOwnerChangedSubscription = null;
+      _nameLostSubscription = null;
+
+      try {
+        await _client.close();
+      } catch (_) {}
+
+      _client = DBusClient.session();
+      _isObjectExported = false;
+
+      await _exportObjectIfNeeded();
+      _listenForBusEvents();
+      await _registerWithWatcher();
+    } finally {
+      _isReconnecting = false;
+    }
+  }
+
   Future<void> close() async {
+    _isClosed = true;
+    await _nameOwnerChangedSubscription?.cancel();
+    await _nameLostSubscription?.cancel();
     await _scrollController.close();
     await _secondaryActivateController.close();
     await _client.close();
@@ -300,7 +377,9 @@ class _AppIndicatorObject extends StatusNotifierItem {
   @override
   Future<DBusMethodResponse> doXAyatanaSecondaryActivate(int timestamp) async {
     _handleSecondaryAction();
-    if (onXAyatanaSecondaryActivate != null) onXAyatanaSecondaryActivate!(timestamp);
+    if (onXAyatanaSecondaryActivate != null) {
+      onXAyatanaSecondaryActivate!(timestamp);
+    }
     return DBusMethodSuccessResponse([]);
   }
 

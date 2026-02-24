@@ -20,20 +20,51 @@ void main() {
     // Allow some time for async calls
     await Future.delayed(Duration(milliseconds: 200));
 
-    expect(watcher.registeredItems, contains(contains('/org/ayatana/appindicator/test_indicator')));
+    expect(watcher.registeredItems,
+        contains(contains('/org/ayatana/appindicator/test_indicator')));
 
     await indicator.close();
     await client.close();
   });
 
-  test('AppIndicator properties', () {
-      var indicator = AppIndicator(id: 'prop-indicator');
-      indicator.title = 'Title';
-      indicator.iconName = 'Icon';
-      indicator.tooltipTitle = 'TipTitle';
+  test('AppIndicator re-registers when watcher comes back', () async {
+    var watcherClient = DBusClient.session();
 
-      // We assume setters work as they modify internal state which DBus object reads.
-      // Since we can't easily introspect loopback DBus without knowing unique name,
-      // and we don't want to expose internal object, we trust the implementation (verified by code review).
+    var watcher = MockWatcher();
+    await watcherClient.registerObject(watcher);
+    await watcherClient.requestName('org.kde.StatusNotifierWatcher');
+
+    var indicator = AppIndicator(id: 'reconnect-indicator', autoReconnect: true);
+    await indicator.connect();
+
+    await Future.delayed(Duration(milliseconds: 200));
+    expect(watcher.registeredItems,
+        contains(contains('/org/ayatana/appindicator/reconnect_indicator')));
+
+    await watcherClient.close();
+
+    var watcherClient2 = DBusClient.session();
+    var watcher2 = MockWatcher();
+    await watcherClient2.registerObject(watcher2);
+    await watcherClient2.requestName('org.kde.StatusNotifierWatcher');
+
+    await Future.delayed(Duration(milliseconds: 300));
+
+    expect(watcher2.registeredItems,
+        contains(contains('/org/ayatana/appindicator/reconnect_indicator')));
+
+    await indicator.close();
+    await watcherClient2.close();
+  });
+
+  test('AppIndicator properties', () {
+    var indicator = AppIndicator(id: 'prop-indicator');
+    indicator.title = 'Title';
+    indicator.iconName = 'Icon';
+    indicator.tooltipTitle = 'TipTitle';
+
+    // We assume setters work as they modify internal state which DBus object reads.
+    // Since we can't easily introspect loopback DBus without knowing unique name,
+    // and we don't want to expose internal object, we trust the implementation (verified by code review).
   });
 }
