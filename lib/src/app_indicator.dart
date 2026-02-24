@@ -33,6 +33,8 @@ class AppIndicator {
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
+  bool _isConnected = false;
+  bool _isConnecting = false;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
@@ -161,26 +163,48 @@ class AppIndicator {
   Stream<SecondaryActivateEvent> get secondaryActivateEvents => _secondaryActivateController.stream;
 
   Future<void> connect() async {
-    await _client.registerObject(_object);
-    _object.menuImpl.client = _client;
-    _object.actionGroupImpl.client = _client;
+    if (_isConnected) {
+      return;
+    }
+    if (_isConnecting) {
+      throw StateError('connect() is already in progress for AppIndicator "$id".');
+    }
 
-    // Connect to watcher
-    _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
-        path: DBusObjectPath('/StatusNotifierWatcher'));
+    _isConnecting = true;
 
-    // Register
     try {
-      await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
-    } catch (e) {
-      print('Failed to register with watcher: $e');
+      await _client.registerObject(_object);
+      _object.menuImpl.client = _client;
+      _object.actionGroupImpl.client = _client;
+
+      // Connect to watcher
+      _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
+          path: DBusObjectPath('/StatusNotifierWatcher'));
+
+      // Register
+      try {
+        await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
+      } catch (e) {
+        print('Failed to register with watcher: $e');
+      }
+      _isConnected = true;
+    } finally {
+      _isConnecting = false;
     }
   }
 
   Future<void> close() async {
+    if (_isConnecting) {
+      throw StateError('Cannot call close() while connect() is in progress for AppIndicator "$id".');
+    }
+    if (!_isConnected) {
+      return;
+    }
+
     await _scrollController.close();
     await _secondaryActivateController.close();
     await _client.close();
+    _isConnected = false;
   }
 }
 
