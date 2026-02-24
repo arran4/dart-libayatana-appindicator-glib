@@ -252,6 +252,24 @@ class AppIndicator {
   Stream<SecondaryActivateEvent> get secondaryActivateEvents =>
       _secondaryActivateController.stream;
 
+  /// Returns true when a StatusNotifierWatcher backend was discovered.
+  bool get isWatcherAvailable => _watcher != null;
+
+  /// Returns whether the currently connected watcher reports a host.
+  ///
+  /// If no watcher is available, this returns false.
+  Future<bool> isStatusNotifierHostRegistered() async {
+    if (_watcher == null) {
+      return false;
+    }
+
+    try {
+      return await _watcher!.getIsStatusNotifierHostRegistered();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> connect() async {
     await _client.registerObject(_object);
     _isConnected = true;

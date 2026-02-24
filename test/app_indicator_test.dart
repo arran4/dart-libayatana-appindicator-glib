@@ -62,6 +62,28 @@ void main() {
     await indicator.close();
   });
 
+
+  test('AppIndicator reports watcher and host availability', () async {
+    var indicatorWithoutWatcher = AppIndicator(id: 'diag-missing-watcher');
+    await indicatorWithoutWatcher.connect();
+    expect(indicatorWithoutWatcher.isWatcherAvailable, isFalse);
+    expect(await indicatorWithoutWatcher.isStatusNotifierHostRegistered(), isFalse);
+    await indicatorWithoutWatcher.close();
+
+    var client = DBusClient.session();
+    var watcher = MockWatcher();
+    await client.registerObject(watcher);
+    await client.requestName('org.kde.StatusNotifierWatcher');
+
+    var indicatorWithWatcher = AppIndicator(id: 'diag-with-watcher');
+    await indicatorWithWatcher.connect();
+    expect(indicatorWithWatcher.isWatcherAvailable, isTrue);
+    expect(await indicatorWithWatcher.isStatusNotifierHostRegistered(), isFalse);
+
+    await indicatorWithWatcher.close();
+    await client.close();
+  });
+
   test('AppIndicator properties', () {
     var indicator = AppIndicator(id: 'prop-indicator');
     indicator.title = 'Title';

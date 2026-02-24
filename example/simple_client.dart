@@ -88,6 +88,15 @@ Future<void> main() async {
   indicator.setMenu(menuItems);
 
   await indicator.connect();
+
+  if (!indicator.isWatcherAvailable) {
+    print('Indicator exported on D-Bus, but no StatusNotifierWatcher is available.');
+    print('No icon will be shown until an indicator host/watcher is running.');
+  } else if (!await indicator.isStatusNotifierHostRegistered()) {
+    print('Indicator registered with watcher, but no StatusNotifierHost is registered.');
+    print('Ensure your desktop environment has an AppIndicator/SNI host enabled.');
+  }
+
   print('Indicator connected. Press Ctrl+C to exit.');
 
   // Keep running
