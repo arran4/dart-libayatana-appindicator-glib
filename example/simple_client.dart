@@ -66,19 +66,14 @@ Future<void> main() async {
       DBusMenuItem({'label': DBusString('Sub Item 1')}, {}),
       DBusMenuItem({'label': DBusString('Sub Item 2')}, {})
   ];
-  // addSubMenu returns ID
-  // Wait, I didn't expose addSubMenu in AppIndicator yet?
-  // I added it in previous step to lib/src/app_indicator.dart, let me check.
-
-  // Checking file content or assuming I did.
-  // I did add `int addSubMenu(List<DBusMenuItem> items)` in `lib/src/app_indicator.dart`.
-
+  // addSubMenu returns the menu-model ID exported for this submenu.
   var subMenuId = indicator.addSubMenu(subItems);
 
   menuItems.add(DBusMenuItem({
       'label': DBusString('Submenu'),
   }, {
-      'submenu': DBusUint32(subMenuId) // Link to submenu
+      // The submenu property links this menu item to the exported submenu ID.
+      'submenu': DBusUint32(subMenuId)
   }));
 
   menuItems.add(DBusMenuItem({
