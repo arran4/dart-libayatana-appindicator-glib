@@ -26,6 +26,33 @@ void main() {
     await client.close();
   });
 
+
+  test('AppIndicator retries registration with bounded backoff', () async {
+    var client = DBusClient.session();
+
+    var watcher = FlakyMockWatcher(remainingFailures: 2);
+    await client.registerObject(watcher);
+    await client.requestName('org.kde.StatusNotifierWatcher');
+
+    var indicator = AppIndicator(
+      id: 'retry-indicator',
+      registrationRetryCount: 3,
+      registrationTimeout: Duration(milliseconds: 300),
+      registrationBackoffBase: Duration(milliseconds: 10),
+      registrationBackoffMax: Duration(milliseconds: 20),
+    );
+
+    await indicator.connect();
+
+    await Future.delayed(Duration(milliseconds: 200));
+
+    expect(watcher.registeredItems,
+        contains(contains('/org/ayatana/appindicator/retry_indicator')));
+
+    await indicator.close();
+    await client.close();
+  });
+
   test('AppIndicator properties', () {
       var indicator = AppIndicator(id: 'prop-indicator');
       indicator.title = 'Title';

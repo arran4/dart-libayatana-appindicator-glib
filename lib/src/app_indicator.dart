@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:dbus/dbus.dart';
 
 import 'action_group.dart';
@@ -32,6 +33,10 @@ class AppIndicator {
   final String id;
   final DBusClient _client;
   final _AppIndicatorObject _object;
+  final int registrationRetryCount;
+  final Duration registrationTimeout;
+  final Duration registrationBackoffBase;
+  final Duration registrationBackoffMax;
   StatusNotifierWatcher? _watcher;
 
   // Stream controllers
@@ -41,7 +46,11 @@ class AppIndicator {
   AppIndicator(
       {required this.id,
       String iconName = '',
-      AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
+      AppIndicatorCategory category = AppIndicatorCategory.applicationStatus,
+      this.registrationRetryCount = 3,
+      this.registrationTimeout = const Duration(seconds: 2),
+      this.registrationBackoffBase = const Duration(milliseconds: 100),
+      this.registrationBackoffMax = const Duration(seconds: 1)})
       : _client = DBusClient.session(),
         _object = _AppIndicatorObject(DBusObjectPath(
             '/org/ayatana/appindicator/${_cleanId(id)}')) {
@@ -160,7 +169,7 @@ class AppIndicator {
   Stream<ScrollEvent> get scrollEvents => _scrollController.stream;
   Stream<SecondaryActivateEvent> get secondaryActivateEvents => _secondaryActivateController.stream;
 
-  Future<void> connect() async {
+  Future<void> connect({int? registrationRetryCount, Duration? registrationTimeout}) async {
     await _client.registerObject(_object);
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
@@ -169,11 +178,27 @@ class AppIndicator {
     _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
         path: DBusObjectPath('/StatusNotifierWatcher'));
 
-    // Register
-    try {
-      await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
-    } catch (e) {
-      print('Failed to register with watcher: $e');
+    // Register with bounded exponential backoff.
+    final retries = registrationRetryCount ?? this.registrationRetryCount;
+    final timeout = registrationTimeout ?? this.registrationTimeout;
+
+    for (var attempt = 0; attempt <= retries; attempt++) {
+      try {
+        await _watcher!
+            .callRegisterStatusNotifierItem(_object.path.toString())
+            .timeout(timeout);
+        return;
+      } catch (e) {
+        if (attempt >= retries) {
+          print('Failed to register with watcher after ${attempt + 1} attempts: $e');
+          return;
+        }
+
+        final backoffMs = min(
+            registrationBackoffBase.inMilliseconds * (1 << attempt),
+            registrationBackoffMax.inMilliseconds);
+        await Future.delayed(Duration(milliseconds: backoffMs));
+      }
     }
   }
 

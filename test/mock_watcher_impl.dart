@@ -33,3 +33,21 @@ class MockWatcher extends StatusNotifierWatcher {
     return DBusMethodSuccessResponse([DBusArray.string(registeredItems)]);
   }
 }
+
+class FlakyMockWatcher extends MockWatcher {
+  int remainingFailures;
+
+  FlakyMockWatcher({required this.remainingFailures});
+
+  @override
+  Future<DBusMethodResponse> doRegisterStatusNotifierItem(String service) async {
+    if (remainingFailures > 0) {
+      remainingFailures--;
+      return DBusMethodErrorResponse(
+          'org.freedesktop.DBus.Error.NoReply',
+          values: [DBusString('Temporary failure')]);
+    }
+
+    return super.doRegisterStatusNotifierItem(service);
+  }
+}

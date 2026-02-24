@@ -34,6 +34,8 @@ Future<void> main() async {
   var indicator = AppIndicator(
     id: 'my-indicator',
     iconName: 'indicator-messages',
+    registrationRetryCount: 5,
+    registrationTimeout: Duration(seconds: 1),
   );
 
   indicator.status = AppIndicatorStatus.active;
@@ -51,7 +53,7 @@ Future<void> main() async {
   ];
   indicator.setMenu(menu);
 
-  await indicator.connect();
+  await indicator.connect(registrationRetryCount: 2);
 }
 ```
 
