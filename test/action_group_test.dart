@@ -82,6 +82,6 @@ void main() {
 
     expect(result.children[0], DBusBoolean(false));
     var stateArray = result.children[2] as DBusArray;
-    expect(stateArray.children.single, DBusString('on'));
+    expect(stateArray.children.single, DBusVariant(DBusString('on')));
   });
 }
