@@ -9,18 +9,33 @@ class DBusMenu extends DBusObject {
   int addMenu(List<DBusMenuItem> items) {
     var id = _nextMenuId++;
     _menus[id] = items;
-    // Emit Changed signal? Ideally.
+    _emitMenuChanged(id, items);
     return id;
   }
 
   void setMenu(int id, List<DBusMenuItem> items) {
     _menus[id] = items;
-    // Emit Changed
+    _emitMenuChanged(id, items);
   }
 
   void clear() {
     _menus.clear();
     _nextMenuId = 0;
+  }
+
+  Future<void> _emitMenuChanged(int menuId, List<DBusMenuItem> items) async {
+    await emitSignal('org.gtk.Menus', 'Changed', [
+      DBusArray(DBusSignature('(uuuua(a{sv}a{sv}))'), [
+        DBusStruct([
+          DBusUint32(0), // group id
+          DBusUint32(menuId),
+          DBusUint32(0), // position
+          DBusUint32(0), // removed count
+          DBusArray(DBusSignature('(a{sv}a{sv})'),
+              items.map((item) => item.toDBus()).toList()),
+        ])
+      ])
+    ]);
   }
 
   @override
@@ -71,21 +86,21 @@ class DBusMenu extends DBusObject {
   }
 
   Future<DBusMethodResponse> _handleStart(List<DBusValue> parameters) async {
-    // var groups = parameters[0]; // au
-    // Return all menus
-
+    var requestedGroups = parameters[0].asUint32Array().toSet();
     var menusList = <DBusValue>[];
 
     for (var entry in _menus.entries) {
       var menuId = entry.key;
+      if (requestedGroups.isNotEmpty && !requestedGroups.contains(0)) {
+        continue;
+      }
+
       var items = entry.value;
-
-      var dbusItems = items.map((item) => item.toDBus()).toList();
-
       menusList.add(DBusStruct([
         DBusUint32(0), // Group ID
         DBusUint32(menuId),
-        DBusArray(DBusSignature('(a{sv}a{sv})'), dbusItems),
+        DBusArray(
+            DBusSignature('(a{sv}a{sv})'), items.map((item) => item.toDBus()).toList()),
       ]));
     }
 
@@ -108,14 +123,14 @@ class DBusMenuItem {
     var attrs = DBusDict(
         DBusSignature('s'),
         DBusSignature('v'),
-        attributes.map((k, v) => MapEntry(
-            DBusString(k), v is DBusVariant ? v : DBusVariant(v))));
+        attributes.map((k, v) =>
+            MapEntry(DBusString(k), v is DBusVariant ? v : DBusVariant(v))));
 
     var lnks = DBusDict(
         DBusSignature('s'),
         DBusSignature('v'),
-        links.map((k, v) => MapEntry(
-            DBusString(k), v is DBusVariant ? v : DBusVariant(v))));
+        links.map((k, v) =>
+            MapEntry(DBusString(k), v is DBusVariant ? v : DBusVariant(v))));
 
     return DBusStruct([attrs, lnks]);
   }
