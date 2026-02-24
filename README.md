@@ -1,106 +1,79 @@
-# Ayatana Application Indicator (Dart Port)
+# ayatana_appindicator
 
-A Dart port of [libayatana-appindicator](https://github.com/AyatanaIndicators/libayatana-appindicator).
+Pure Dart implementation of Ayatana AppIndicator built on top of D-Bus.
 
-This library allows applications to export a menu into an Application Indicators aware menu bar using the StatusNotifierItem Specification (SNI). It uses DBus to communicate with the indicator service.
+This package continues the migration away from C bindings and native glue by implementing the StatusNotifierItem/AppIndicator behavior directly in idiomatic Dart code.
 
-**Note:** This is a "hard port" from C to Dart. It does not bind to the C library but reimplements the protocol in pure Dart using the `dbus` package.
+## Goals
 
-## Features
+- ✅ Pure Dart runtime implementation (no FFI/native C bridge in this package).
+- ✅ Minimal dependency surface (`dbus` only at runtime).
+- ✅ StatusNotifier watcher probing for KDE/Freedesktop layouts.
+- ✅ Rich interaction model: primary click, secondary click, context menu, scroll, and Ayatana-specific activation hooks.
+- ✅ Action and menu exports via `org.gtk.Actions` and `org.gtk.Menus`.
 
--   **Pure Dart**: No native dependencies (other than DBus availability).
--   **StatusNotifierItem**: Implements core SNI behavior needed for indicator integration.
--   **Menus**: Exports menus via `org.gtk.Menus`.
--   **Actions**: Exports actions via `org.gtk.Actions`.
--   **Cross-platform**: Works on Linux environments with DBus (e.g., KDE Plasma, GNOME with AppIndicator support, XFCE, MATE).
-
-## Current limitations
-
--   **Watcher-server behavior**: Service watcher/server coordination is not fully implemented in all edge cases.
--   **Action/menu semantics**: Action and menu behavior currently covers only part of the full semantic surface.
--   **Desktop-shell validation**: Compatibility has not yet been comprehensively validated across desktop shells.
-
-## Usage
-
-Add `ayatana_appindicator` to your `pubspec.yaml`:
+## Installation
 
 ```yaml
 dependencies:
   ayatana_appindicator:
-    path: . # or git url
+    git:
+      url: https://github.com/AyatanaIndicators/libayatana-appindicator
 ```
 
-### Example
+## Feature Highlights
 
-```dart
-import 'dart:io';
-import 'package:ayatana_appindicator/ayatana_appindicator.dart';
-import 'package:dbus/dbus.dart';
+- `AppIndicator` exports a fully functional SNI object on the session bus.
+- Supports queued property signal emission before `connect()`.
+- Offers typed event streams:
+  - `activateEvents`
+  - `secondaryActivateEvents`
+  - `contextMenuEvents`
+  - `xAyatanaActivateEvents`
+  - `scrollEvents`
+- Supports action targeting for:
+  - primary click (`setPrimaryActivateTarget`)
+  - secondary click (`setSecondaryActivateTarget`)
+  - double click (`setDoubleClickTarget`)
+- Double-click behavior is configurable with `doubleClickWindow`.
 
-Future<void> main() async {
-  var indicator = AppIndicator(
-    id: 'my-indicator',
-    iconName: 'demo-indicator',
-  );
+## Example
 
-  indicator.status = AppIndicatorStatus.active;
+A full showcase is available in `example/simple_client.dart` with:
 
-  final iconThemePath = Platform.script.resolve('assets').toFilePath();
-  indicator.iconThemePath = iconThemePath;
-  indicator.title = 'My Indicator';
+- dynamic label updates,
+- menu + submenu composition,
+- mapped click actions,
+- double-click reset behavior,
+- scroll-driven progress adjustment,
+- structured event logging.
 
-  // Add actions
-  var actions = [
-    DBusAction('quit', onActivate: (_) => indicator.close()),
-  ];
-  indicator.setActions(actions);
-
-  // Add menu
-  var menu = [
-    DBusMenuItem({'label': DBusString('Quit'), 'action': DBusString('app.quit')}, {}),
-  ];
-  indicator.setMenu(menu);
-
-  await indicator.connect();
-}
-```
-
-See `example/simple_client.dart` for a complete example.
-The bundled demo icon is located at `example/assets/demo-indicator.svg` and is loaded via `iconThemePath` so the sample does not depend on host icon themes.
-
-
-## Watcher Backends and Fallback Behavior
-
-`AppIndicator.connect()` probes common StatusNotifierWatcher backends and registers with the first available endpoint.
-
-Supported watcher bus names and object paths are tried in this order:
-
-1. `org.kde.StatusNotifierWatcher` at `/StatusNotifierWatcher`
-2. `org.freedesktop.StatusNotifierWatcher` at `/StatusNotifierWatcher`
-3. `org.kde.StatusNotifierWatcher` at `/org/kde/StatusNotifierWatcher`
-4. `org.freedesktop.StatusNotifierWatcher` at `/org/freedesktop/StatusNotifierWatcher`
-
-If no watcher is available, `connect()` still exports the indicator object on D-Bus and returns without throwing. This lets your app continue running in environments where no indicator host is currently active.
-
-## Building and Testing
-
-To run the tests:
-
-```bash
-dart test
-```
-
-To run the example (requires a session bus):
+Run it with:
 
 ```bash
 dart run example/simple_client.dart
 ```
 
+## CI Quality Gates
+
+CI validates:
+
+- `dart pub get`
+- `dart analyze`
+- `dart format --output=show --set-exit-if-changed .`
+- `dbus-run-session -- dart test`
+
+When format checks fail, CI prints the format output and a `git diff` preview so changes can be copied/applied quickly.
+
+## Development
+
+```bash
+dart pub get
+dart analyze
+dart format --output=show --set-exit-if-changed .
+dbus-run-session -- dart test
+```
+
 ## License
 
-GNU General Public License version 3 (GPL-3.0). See `COPYING` for details.
-
-## Authors
-
-Original library by Canonical Ltd. and Robert Tari.
-Dart port by [Your Name/Entity].
+GNU General Public License version 3 (GPL-3.0). See `COPYING`.

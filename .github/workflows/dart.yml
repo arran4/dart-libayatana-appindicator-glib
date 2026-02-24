@@ -21,8 +21,19 @@ jobs:
       - name: Analyze
         run: dart analyze
 
+      - name: Format check
+        run: |
+          set +e
+          dart format --output=show --set-exit-if-changed .
+          format_exit=$?
+          if [ $format_exit -ne 0 ]; then
+            echo '--- git diff after format check failure ---'
+            git --no-pager diff
+            exit $format_exit
+          fi
+
       - name: Run tests
         # We need a dbus session for integration tests
         run: |
-            sudo apt-get update && sudo apt-get install -y dbus-x11
-            dbus-run-session -- dart test
+          sudo apt-get update && sudo apt-get install -y dbus-x11
+          dbus-run-session -- dart test
