@@ -21,21 +21,7 @@ Future<void> main() async {
     ..windowId = 0
     ..tooltipTitle = 'Pure Dart AppIndicator'
     ..tooltipDescription = 'Left click, middle click, right click, double click and scroll.'
-    ..iconThemePath = Platform.script.resolve('assets').toFilePath()
-    ..iconPixmaps = const [
-      IconPixmap(
-        width: 1,
-        height: 1,
-        argb32Bytes: [0xff, 0x22, 0x8b, 0x22],
-      ),
-    ]
-    ..attentionIconPixmaps = const [
-      IconPixmap(
-        width: 1,
-        height: 1,
-        argb32Bytes: [0xff, 0xcc, 0x33, 0x33],
-      ),
-    ];
+    ..iconThemePath = Platform.script.resolve('assets').toFilePath();
 
   var percentage = 1;
   var showLabel = true;

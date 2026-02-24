@@ -192,6 +192,19 @@ class AppIndicator {
     return hash.toRadixString(16).padLeft(8, '0');
   }
 
+  static bool _looksLikePath(String value) {
+    if (value.isEmpty) {
+      return false;
+    }
+    if (value.startsWith('/')) {
+      return true;
+    }
+    if (value.length > 2 && RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value)) {
+      return true;
+    }
+    return value.contains('/');
+  }
+
   static String _buildServiceName(String id) {
     final cleaned = _cleanId(id).toLowerCase();
     return 'org.ayatana.appindicator.$cleaned.p$pid';
@@ -219,6 +232,9 @@ class AppIndicator {
 
   set iconName(String name) {
     _object.iconName = name;
+    if (_looksLikePath(name)) {
+      _object.iconThemePath = File(name).parent.path;
+    }
     _queueSignal(_PendingSignal.newIcon);
   }
 
@@ -232,6 +248,21 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newAttentionIcon);
   }
 
+  set overlayIconName(String name) {
+    _object.overlayIconName = name;
+    _queueSignal(_PendingSignal.newOverlayIcon);
+  }
+
+  set overlayIconPixmaps(List<IconPixmap> pixmaps) {
+    _object.overlayIconPixmaps = pixmaps;
+    _queueSignal(_PendingSignal.newOverlayIcon);
+  }
+
+  set attentionMovieName(String value) {
+    _object.attentionMovieName = value;
+    _queueSignal(_PendingSignal.newAttentionMovie);
+  }
+
   set attentionIconPixmaps(List<IconPixmap> pixmaps) {
     _object.attentionIconPixmaps = pixmaps;
     _queueSignal(_PendingSignal.newAttentionIcon);
@@ -243,6 +274,10 @@ class AppIndicator {
 
   set attentionAccessibleDesc(String description) {
     _object.attentionAccessibleDesc = description;
+  }
+
+  set overlayAccessibleDesc(String description) {
+    _object.overlayAccessibleDesc = description;
   }
 
   String get title => _object.title;
@@ -535,6 +570,8 @@ class AppIndicator {
         return _object.emitNewIcon();
       case _PendingSignal.newAttentionIcon:
         return _object.emitNewAttentionIcon();
+      case _PendingSignal.newOverlayIcon:
+        return _object.emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
       case _PendingSignal.newTitle:
         return _object.emitNewTitle();
       case _PendingSignal.newLabel:
@@ -544,6 +581,8 @@ class AppIndicator {
         return _object.emitNewIconThemePath(_object.iconThemePath);
       case _PendingSignal.newToolTip:
         return _object.emitNewToolTip();
+      case _PendingSignal.newAttentionMovie:
+        return _object.emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
     }
   }
 }
@@ -552,6 +591,8 @@ enum _PendingSignal {
   newStatus,
   newIcon,
   newAttentionIcon,
+  newOverlayIcon,
+  newAttentionMovie,
   newTitle,
   newLabel,
   newIconThemePath,
@@ -582,6 +623,10 @@ class _AppIndicatorObject extends StatusNotifierItem {
   bool itemIsMenu = false;
   List<IconPixmap> iconPixmaps = const <IconPixmap>[];
   List<IconPixmap> attentionIconPixmaps = const <IconPixmap>[];
+  String overlayIconName = '';
+  String overlayAccessibleDesc = '';
+  List<IconPixmap> overlayIconPixmaps = const <IconPixmap>[];
+  String attentionMovieName = '';
 
   Function(int, String)? onScroll;
   Function(int, int)? onSecondaryActivate;
@@ -681,6 +726,23 @@ class _AppIndicatorObject extends StatusNotifierItem {
           attentionIconPixmaps.map((frame) => frame.toDBus()).toList(),
         ),
       ]);
+
+
+  Future<DBusMethodResponse> getOverlayIconName() async =>
+      DBusMethodSuccessResponse([DBusString(overlayIconName)]);
+
+  Future<DBusMethodResponse> getOverlayIconAccessibleDesc() async =>
+      DBusMethodSuccessResponse([DBusString(overlayAccessibleDesc)]);
+
+  Future<DBusMethodResponse> getOverlayIconPixmap() async => DBusMethodSuccessResponse([
+        DBusArray(
+          DBusSignature('(iiay)'),
+          overlayIconPixmaps.map((frame) => frame.toDBus()).toList(),
+        ),
+      ]);
+
+  Future<DBusMethodResponse> getAttentionMovieName() async =>
+      DBusMethodSuccessResponse([DBusString(attentionMovieName)]);
 
   // Methods implementation
   @override
@@ -794,6 +856,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
           access: DBusPropertyAccess.read),
       DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
           access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('OverlayIconName', DBusSignature('s'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('OverlayIconAccessibleDesc', DBusSignature('s'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('OverlayIconPixmap', DBusSignature('a(iiay)'),
+          access: DBusPropertyAccess.read),
+      DBusIntrospectProperty('AttentionMovieName', DBusSignature('s'),
+          access: DBusPropertyAccess.read),
     ]);
 
     interfaces.addAll(menuImpl.introspect());
@@ -848,6 +918,14 @@ class _AppIndicatorObject extends StatusNotifierItem {
           return getIconPixmap();
         case 'AttentionIconPixmap':
           return getAttentionIconPixmap();
+        case 'OverlayIconName':
+          return getOverlayIconName();
+        case 'OverlayIconAccessibleDesc':
+          return getOverlayIconAccessibleDesc();
+        case 'OverlayIconPixmap':
+          return getOverlayIconPixmap();
+        case 'AttentionMovieName':
+          return getAttentionMovieName();
       }
     }
 
@@ -868,6 +946,11 @@ class _AppIndicatorObject extends StatusNotifierItem {
     dict['IconPixmap'] = (await getIconPixmap()).returnValues[0];
     dict['AttentionIconPixmap'] =
         (await getAttentionIconPixmap()).returnValues[0];
+    dict['OverlayIconName'] = (await getOverlayIconName()).returnValues[0];
+    dict['OverlayIconAccessibleDesc'] =
+        (await getOverlayIconAccessibleDesc()).returnValues[0];
+    dict['OverlayIconPixmap'] = (await getOverlayIconPixmap()).returnValues[0];
+    dict['AttentionMovieName'] = (await getAttentionMovieName()).returnValues[0];
     return DBusMethodSuccessResponse([DBusDict.stringVariant(dict)]);
   }
 
