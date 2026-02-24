@@ -20,7 +20,8 @@ Future<void> main() async {
     ..labelGuide = '100%'
     ..windowId = 0
     ..tooltipTitle = 'Pure Dart AppIndicator'
-    ..tooltipDescription = 'Left click, middle click, right click, double click and scroll.'
+    ..tooltipDescription =
+        'Left click, middle click, right click, double click and scroll.'
     ..iconThemePath = Platform.script.resolve('assets').toFilePath();
 
   var percentage = 1;
@@ -60,7 +61,8 @@ Future<void> main() async {
           ),
           DBusMenuItem(
             {
-              'label': DBusString(item3Enabled ? 'Sub 1 (enabled)' : 'Sub 1 (disabled)'),
+              'label': DBusString(
+                  item3Enabled ? 'Sub 1 (enabled)' : 'Sub 1 (disabled)'),
               'action': DBusString('app.sub_1'),
               'enabled': DBusBoolean(item3Enabled),
             },
@@ -82,7 +84,8 @@ Future<void> main() async {
     ),
     DBusAction(
       'toggle_sub_1',
-      onActivate: (_) => log('Sub 2 clicked. Sub 1 enable state toggled from parent action.'),
+      onActivate: (_) =>
+          log('Sub 2 clicked. Sub 1 enable state toggled from parent action.'),
     ),
     DBusAction(
       'sub_3',
@@ -92,8 +95,9 @@ Future<void> main() async {
       'toggle_attention',
       onActivate: (_) {
         attentionActive = !attentionActive;
-        indicator.status =
-            attentionActive ? AppIndicatorStatus.attention : AppIndicatorStatus.active;
+        indicator.status = attentionActive
+            ? AppIndicatorStatus.attention
+            : AppIndicatorStatus.active;
         indicator.tooltipDescription = attentionActive
             ? 'Attention mode enabled.'
             : 'Attention mode disabled.';
@@ -110,9 +114,11 @@ Future<void> main() async {
       'toggle_icon_source',
       onActivate: (_) {
         localIconMode = !localIconMode;
-        indicator.iconName = localIconMode ? 'demo-indicator' : 'indicator-messages';
-        indicator.tooltipDescription =
-            localIconMode ? 'Using bundled local icon.' : 'Using system theme icon.';
+        indicator.iconName =
+            localIconMode ? 'demo-indicator' : 'indicator-messages';
+        indicator.tooltipDescription = localIconMode
+            ? 'Using bundled local icon.'
+            : 'Using system theme icon.';
       },
     ),
     DBusAction(
@@ -127,8 +133,9 @@ Future<void> main() async {
       'primary_toggle_attention',
       onActivate: (_) {
         attentionActive = !attentionActive;
-        indicator.status =
-            attentionActive ? AppIndicatorStatus.attention : AppIndicatorStatus.active;
+        indicator.status = attentionActive
+            ? AppIndicatorStatus.attention
+            : AppIndicatorStatus.active;
       },
     ),
     DBusAction(
@@ -177,14 +184,32 @@ Future<void> main() async {
   ]);
 
   indicator.setMenu([
-    DBusMenuItem({'label': DBusString('Item 1'), 'action': DBusString('app.item_1')}, {}),
-    DBusMenuItem({'label': DBusString('Item 2'), 'action': DBusString('app.item_2')}, {}),
-    DBusMenuItem({'label': DBusString('Submenu')}, {'submenu': DBusUint32(submenuId)}),
-    DBusMenuItem({'label': DBusString('Toggle Attention'), 'action': DBusString('app.toggle_attention')}, {}),
-    DBusMenuItem({'label': DBusString('Toggle Label'), 'action': DBusString('app.toggle_label')}, {}),
-    DBusMenuItem({'label': DBusString('Toggle Submenu Item State'), 'action': DBusString('app.toggle_item_3')}, {}),
-    DBusMenuItem({'label': DBusString('Toggle Icon Source'), 'action': DBusString('app.toggle_icon_source')}, {}),
-    DBusMenuItem({'label': DBusString('Quit'), 'action': DBusString('app.quit')}, {}),
+    DBusMenuItem(
+        {'label': DBusString('Item 1'), 'action': DBusString('app.item_1')},
+        {}),
+    DBusMenuItem(
+        {'label': DBusString('Item 2'), 'action': DBusString('app.item_2')},
+        {}),
+    DBusMenuItem(
+        {'label': DBusString('Submenu')}, {'submenu': DBusUint32(submenuId)}),
+    DBusMenuItem({
+      'label': DBusString('Toggle Attention'),
+      'action': DBusString('app.toggle_attention')
+    }, {}),
+    DBusMenuItem({
+      'label': DBusString('Toggle Label'),
+      'action': DBusString('app.toggle_label')
+    }, {}),
+    DBusMenuItem({
+      'label': DBusString('Toggle Submenu Item State'),
+      'action': DBusString('app.toggle_item_3')
+    }, {}),
+    DBusMenuItem({
+      'label': DBusString('Toggle Icon Source'),
+      'action': DBusString('app.toggle_icon_source')
+    }, {}),
+    DBusMenuItem(
+        {'label': DBusString('Quit'), 'action': DBusString('app.quit')}, {}),
   ]);
 
   indicator.activateEvents.listen((event) {

@@ -5,7 +5,10 @@ import 'package:dbus/dbus.dart';
 
 class StatusNotifierItem extends DBusObject {
   /// Creates a new object to expose on [path].
-  StatusNotifierItem({DBusObjectPath path = const DBusObjectPath.unchecked('/StatusNotifierItem')}) : super(path);
+  StatusNotifierItem(
+      {DBusObjectPath path =
+          const DBusObjectPath.unchecked('/StatusNotifierItem')})
+      : super(path);
 
   String id = '';
   String category = '';
@@ -114,42 +117,112 @@ class StatusNotifierItem extends DBusObject {
 
   /// Emits signal org.kde.StatusNotifierItem.NewIcon
   Future<void> emitNewIcon() async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewIcon', []);
+    await emitSignal('org.kde.StatusNotifierItem', 'NewIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewIconThemePath
   Future<void> emitNewIconThemePath(String icon_theme_path) async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewIconThemePath', [DBusString(icon_theme_path)]);
+    await emitSignal('org.kde.StatusNotifierItem', 'NewIconThemePath',
+        [DBusString(icon_theme_path)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewAttentionIcon
   Future<void> emitNewAttentionIcon() async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewStatus
   Future<void> emitNewStatus(String status) async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewStatus', [DBusString(status)]);
+    await emitSignal(
+        'org.kde.StatusNotifierItem', 'NewStatus', [DBusString(status)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.XAyatanaNewLabel
   Future<void> emitXAyatanaNewLabel(String label, String guide) async {
-     await emitSignal('org.kde.StatusNotifierItem', 'XAyatanaNewLabel', [DBusString(label), DBusString(guide)]);
+    await emitSignal('org.kde.StatusNotifierItem', 'XAyatanaNewLabel',
+        [DBusString(label), DBusString(guide)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewTitle
   Future<void> emitNewTitle() async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewTitle', []);
+    await emitSignal('org.kde.StatusNotifierItem', 'NewTitle', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewToolTip
   Future<void> emitNewToolTip() async {
-     await emitSignal('org.kde.StatusNotifierItem', 'NewToolTip', []);
+    await emitSignal('org.kde.StatusNotifierItem', 'NewToolTip', []);
   }
 
   @override
   List<DBusIntrospectInterface> introspect() {
-    return [DBusIntrospectInterface('org.kde.StatusNotifierItem', methods: [DBusIntrospectMethod('Scroll', args: [DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'delta'), DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'orientation')]), DBusIntrospectMethod('SecondaryActivate', args: [DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'), DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y')]), DBusIntrospectMethod('XAyatanaSecondaryActivate', args: [DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_, name: 'timestamp')])], signals: [DBusIntrospectSignal('NewIcon'), DBusIntrospectSignal('NewIconThemePath', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'icon_theme_path')]), DBusIntrospectSignal('NewAttentionIcon'), DBusIntrospectSignal('NewStatus', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'status')]), DBusIntrospectSignal('XAyatanaNewLabel', args: [DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'label'), DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out, name: 'guide')]), DBusIntrospectSignal('NewTitle'), DBusIntrospectSignal('NewToolTip')], properties: [DBusIntrospectProperty('Id', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('Category', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('Status', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('IconName', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('IconAccessibleDesc', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('AttentionIconName', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('AttentionAccessibleDesc', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('Title', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('IconThemePath', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('Menu', DBusSignature('o'), access: DBusPropertyAccess.read), DBusIntrospectProperty('XAyatanaLabel', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('XAyatanaLabelGuide', DBusSignature('s'), access: DBusPropertyAccess.read), DBusIntrospectProperty('XAyatanaOrderingIndex', DBusSignature('u'), access: DBusPropertyAccess.read), DBusIntrospectProperty('ToolTip', DBusSignature('(sa(iiay)ss)'), access: DBusPropertyAccess.read)])];
+    return [
+      DBusIntrospectInterface('org.kde.StatusNotifierItem', methods: [
+        DBusIntrospectMethod('Scroll', args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'delta'),
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+              name: 'orientation')
+        ]),
+        DBusIntrospectMethod('SecondaryActivate', args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y')
+        ]),
+        DBusIntrospectMethod('XAyatanaSecondaryActivate', args: [
+          DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
+              name: 'timestamp')
+        ])
+      ], signals: [
+        DBusIntrospectSignal('NewIcon'),
+        DBusIntrospectSignal('NewIconThemePath', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'icon_theme_path')
+        ]),
+        DBusIntrospectSignal('NewAttentionIcon'),
+        DBusIntrospectSignal('NewStatus', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'status')
+        ]),
+        DBusIntrospectSignal('XAyatanaNewLabel', args: [
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'label'),
+          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+              name: 'guide')
+        ]),
+        DBusIntrospectSignal('NewTitle'),
+        DBusIntrospectSignal('NewToolTip')
+      ], properties: [
+        DBusIntrospectProperty('Id', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('Category', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('Status', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('IconName', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('IconAccessibleDesc', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('AttentionIconName', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('AttentionAccessibleDesc', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('Title', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('IconThemePath', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('Menu', DBusSignature('o'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('XAyatanaLabel', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('XAyatanaLabelGuide', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('XAyatanaOrderingIndex', DBusSignature('u'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('ToolTip', DBusSignature('(sa(iiay)ss)'),
+            access: DBusPropertyAccess.read)
+      ])
+    ];
   }
 
   @override
@@ -159,12 +232,14 @@ class StatusNotifierItem extends DBusObject {
         if (methodCall.signature != DBusSignature('is')) {
           return DBusMethodErrorResponse.invalidArgs();
         }
-        return doScroll(methodCall.values[0].asInt32(), methodCall.values[1].asString());
+        return doScroll(
+            methodCall.values[0].asInt32(), methodCall.values[1].asString());
       } else if (methodCall.name == 'SecondaryActivate') {
         if (methodCall.signature != DBusSignature('ii')) {
           return DBusMethodErrorResponse.invalidArgs();
         }
-        return doSecondaryActivate(methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+        return doSecondaryActivate(
+            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
       } else if (methodCall.name == 'XAyatanaSecondaryActivate') {
         if (methodCall.signature != DBusSignature('u')) {
           return DBusMethodErrorResponse.invalidArgs();
@@ -218,7 +293,8 @@ class StatusNotifierItem extends DBusObject {
   }
 
   @override
-  Future<DBusMethodResponse> setProperty(String interface, String name, DBusValue value) async {
+  Future<DBusMethodResponse> setProperty(
+      String interface, String name, DBusValue value) async {
     if (interface == 'org.kde.StatusNotifierItem') {
       if (name == 'Id') {
         return DBusMethodErrorResponse.propertyReadOnly();
@@ -264,15 +340,20 @@ class StatusNotifierItem extends DBusObject {
       properties['Category'] = (await getCategory()).returnValues[0];
       properties['Status'] = (await getStatus()).returnValues[0];
       properties['IconName'] = (await getIconName()).returnValues[0];
-      properties['IconAccessibleDesc'] = (await getIconAccessibleDesc()).returnValues[0];
-      properties['AttentionIconName'] = (await getAttentionIconName()).returnValues[0];
-      properties['AttentionAccessibleDesc'] = (await getAttentionAccessibleDesc()).returnValues[0];
+      properties['IconAccessibleDesc'] =
+          (await getIconAccessibleDesc()).returnValues[0];
+      properties['AttentionIconName'] =
+          (await getAttentionIconName()).returnValues[0];
+      properties['AttentionAccessibleDesc'] =
+          (await getAttentionAccessibleDesc()).returnValues[0];
       properties['Title'] = (await getTitle()).returnValues[0];
       properties['IconThemePath'] = (await getIconThemePath()).returnValues[0];
       properties['Menu'] = (await getMenu()).returnValues[0];
       properties['XAyatanaLabel'] = (await getXAyatanaLabel()).returnValues[0];
-      properties['XAyatanaLabelGuide'] = (await getXAyatanaLabelGuide()).returnValues[0];
-      properties['XAyatanaOrderingIndex'] = (await getXAyatanaOrderingIndex()).returnValues[0];
+      properties['XAyatanaLabelGuide'] =
+          (await getXAyatanaLabelGuide()).returnValues[0];
+      properties['XAyatanaOrderingIndex'] =
+          (await getXAyatanaOrderingIndex()).returnValues[0];
       properties['ToolTip'] = (await getToolTip()).returnValues[0];
     }
     return DBusMethodSuccessResponse([DBusDict.stringVariant(properties)]);

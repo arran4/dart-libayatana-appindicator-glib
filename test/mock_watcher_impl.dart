@@ -9,14 +9,16 @@ class MockWatcher extends StatusNotifierWatcher {
       : super(path: DBusObjectPath(path));
 
   @override
-  Future<DBusMethodResponse> doRegisterStatusNotifierItem(String service) async {
+  Future<DBusMethodResponse> doRegisterStatusNotifierItem(
+      String service) async {
     registeredItems.add(service);
     await emitStatusNotifierItemRegistered(service);
     return DBusMethodSuccessResponse([]);
   }
 
   @override
-  Future<DBusMethodResponse> doRegisterStatusNotifierHost(String service) async {
+  Future<DBusMethodResponse> doRegisterStatusNotifierHost(
+      String service) async {
     return DBusMethodSuccessResponse([]);
   }
 
@@ -51,9 +53,8 @@ class MockWatcher extends StatusNotifierWatcher {
       } else if (name == 'IsStatusNotifierHostRegistered') {
         return DBusMethodSuccessResponse([DBusVariant(DBusBoolean(false))]);
       } else if (name == 'RegisteredStatusNotifierItems') {
-        return DBusMethodSuccessResponse([
-          DBusVariant(DBusArray.string(registeredItems))
-        ]);
+        return DBusMethodSuccessResponse(
+            [DBusVariant(DBusArray.string(registeredItems))]);
       }
     }
     return super.getProperty(interface, name);

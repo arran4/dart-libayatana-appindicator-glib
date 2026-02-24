@@ -6,8 +6,10 @@ class DBusActionGroup extends DBusObject {
   DBusActionGroup(DBusObjectPath path) : super(path);
 
   void addAction(DBusAction action) {
-    action._onStateChanged = (state) => _emitActionStateChanged(action.name, state);
-    action._onEnabledChanged = (enabled) => _emitActionEnabledChanged(action.name, enabled);
+    action._onStateChanged =
+        (state) => _emitActionStateChanged(action.name, state);
+    action._onEnabledChanged =
+        (enabled) => _emitActionEnabledChanged(action.name, enabled);
     _actions[action.name] = action;
     _emitActionAdded(action);
   }
@@ -31,40 +33,52 @@ class DBusActionGroup extends DBusObject {
         'org.gtk.Actions',
         methods: [
           DBusIntrospectMethod('Describe', args: [
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
                 name: 'action_name'),
-            DBusIntrospectArgument(DBusSignature('(bgav)'),
-                DBusArgumentDirection.out, name: 'description')
+            DBusIntrospectArgument(
+                DBusSignature('(bgav)'), DBusArgumentDirection.out,
+                name: 'description')
           ]),
           DBusIntrospectMethod('DescribeAll', args: [
-            DBusIntrospectArgument(DBusSignature('a{s(bgav)}'),
-                DBusArgumentDirection.out, name: 'descriptions')
+            DBusIntrospectArgument(
+                DBusSignature('a{s(bgav)}'), DBusArgumentDirection.out,
+                name: 'descriptions')
           ]),
           DBusIntrospectMethod('SetState', args: [
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
                 name: 'action_name'),
-            DBusIntrospectArgument(DBusSignature('v'), DBusArgumentDirection.in_,
+            DBusIntrospectArgument(
+                DBusSignature('v'), DBusArgumentDirection.in_,
                 name: 'value')
           ]),
           DBusIntrospectMethod('Activate', args: [
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
                 name: 'action_name'),
-            DBusIntrospectArgument(DBusSignature('av'),
-                DBusArgumentDirection.in_, name: 'parameter'),
-            DBusIntrospectArgument(DBusSignature('a{sv}'),
-                DBusArgumentDirection.in_, name: 'platform_data')
+            DBusIntrospectArgument(
+                DBusSignature('av'), DBusArgumentDirection.in_,
+                name: 'parameter'),
+            DBusIntrospectArgument(
+                DBusSignature('a{sv}'), DBusArgumentDirection.in_,
+                name: 'platform_data')
           ]),
         ],
         signals: [
           DBusIntrospectSignal('Changed', args: [
-            DBusIntrospectArgument(DBusSignature('as'),
-                DBusArgumentDirection.out, name: 'removed'),
-            DBusIntrospectArgument(DBusSignature('a{sb}'),
-                DBusArgumentDirection.out, name: 'enabled_changed'),
-            DBusIntrospectArgument(DBusSignature('a{sv}'),
-                DBusArgumentDirection.out, name: 'state_changed'),
-            DBusIntrospectArgument(DBusSignature('a{s(bgav)}'),
-                DBusArgumentDirection.out, name: 'added'),
+            DBusIntrospectArgument(
+                DBusSignature('as'), DBusArgumentDirection.out,
+                name: 'removed'),
+            DBusIntrospectArgument(
+                DBusSignature('a{sb}'), DBusArgumentDirection.out,
+                name: 'enabled_changed'),
+            DBusIntrospectArgument(
+                DBusSignature('a{sv}'), DBusArgumentDirection.out,
+                name: 'state_changed'),
+            DBusIntrospectArgument(
+                DBusSignature('a{s(bgav)}'), DBusArgumentDirection.out,
+                name: 'added'),
           ]),
         ],
       ),
@@ -200,19 +214,11 @@ class DBusActionGroup extends DBusObject {
     await emitSignal('org.gtk.Actions', 'Changed', [
       DBusArray(
           DBusSignature('s'), removed.map((name) => DBusString(name)).toList()),
-      DBusDict(
-          DBusSignature('s'),
-          DBusSignature('b'),
-          enabledChanged.map(
-              (k, v) => MapEntry(DBusString(k), v))),
-      DBusDict(
-          DBusSignature('s'),
-          DBusSignature('v'),
-          stateChanged.map(
-              (k, v) => MapEntry(DBusString(k), v))),
-      DBusDict(
-          DBusSignature('s'),
-          DBusSignature('(bgav)'),
+      DBusDict(DBusSignature('s'), DBusSignature('b'),
+          enabledChanged.map((k, v) => MapEntry(DBusString(k), v))),
+      DBusDict(DBusSignature('s'), DBusSignature('v'),
+          stateChanged.map((k, v) => MapEntry(DBusString(k), v))),
+      DBusDict(DBusSignature('s'), DBusSignature('(bgav)'),
           added.map((k, v) => MapEntry(DBusString(k), v))),
     ]);
   }
