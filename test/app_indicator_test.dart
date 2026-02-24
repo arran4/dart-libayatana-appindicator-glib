@@ -20,8 +20,10 @@ void main() {
     // Allow some time for async calls
     await Future.delayed(Duration(milliseconds: 200));
 
-    expect(watcher.registeredItems,
-        contains(contains('/org/ayatana/appindicator/test_indicator')));
+    expect(
+      watcher.registeredItems,
+      contains(contains('/org/ayatana/appindicator/test_indicator')),
+    );
 
     await indicator.close();
     await client.close();

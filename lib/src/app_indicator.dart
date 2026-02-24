@@ -82,10 +82,24 @@ class AppIndicator {
   }
 
   // Properties setters
+  AppIndicatorStatus get status {
+    switch (_object.status) {
+      case 'Active':
+        return AppIndicatorStatus.active;
+      case 'Attention':
+        return AppIndicatorStatus.attention;
+      case 'Passive':
+      default:
+        return AppIndicatorStatus.passive;
+    }
+  }
+
   set status(AppIndicatorStatus status) {
     _object.status = status.name;
     _object.emitNewStatus(status.name);
   }
+
+  String get iconName => _object.iconName;
 
   set iconName(String name) {
     _object.iconName = name;
@@ -105,20 +119,28 @@ class AppIndicator {
     _object.attentionAccessibleDesc = description;
   }
 
+  String get title => _object.title;
+
   set title(String title) {
     _object.title = title;
     _object.emitNewTitle();
   }
+
+  String get label => _object.xAyatanaLabel;
 
   set label(String label) {
     _object.xAyatanaLabel = label;
     _object.emitXAyatanaNewLabel(label, _object.xAyatanaLabelGuide);
   }
 
+  String get labelGuide => _object.xAyatanaLabelGuide;
+
   set labelGuide(String guide) {
     _object.xAyatanaLabelGuide = guide;
     _object.emitXAyatanaNewLabel(_object.xAyatanaLabel, guide);
   }
+
+  int get orderingIndex => _object.xAyatanaOrderingIndex;
 
   set orderingIndex(int orderingIndex) {
     _object.xAyatanaOrderingIndex = orderingIndex;
@@ -130,19 +152,25 @@ class AppIndicator {
   }
 
   // Tooltip properties
+  String get tooltipIconName => _object.toolTipIconName;
+
   set tooltipIconName(String name) {
-      _object.toolTipIconName = name;
-      _object.emitNewToolTip();
+    _object.toolTipIconName = name;
+    _object.emitNewToolTip();
   }
+
+  String get tooltipTitle => _object.toolTipTitle;
 
   set tooltipTitle(String title) {
-      _object.toolTipTitle = title;
-      _object.emitNewToolTip();
+    _object.toolTipTitle = title;
+    _object.emitNewToolTip();
   }
 
+  String get tooltipDescription => _object.toolTipDescription;
+
   set tooltipDescription(String description) {
-      _object.toolTipDescription = description;
-      _object.emitNewToolTip();
+    _object.toolTipDescription = description;
+    _object.emitNewToolTip();
   }
 
   void setMenu(List<DBusMenuItem> items) {
