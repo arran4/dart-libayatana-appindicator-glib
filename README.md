@@ -57,6 +57,20 @@ Future<void> main() async {
 
 See `example/simple_client.dart` for a complete example.
 
+
+## Watcher Backends and Fallback Behavior
+
+`AppIndicator.connect()` probes common StatusNotifierWatcher backends and registers with the first available endpoint.
+
+Supported watcher bus names and object paths are tried in this order:
+
+1. `org.kde.StatusNotifierWatcher` at `/StatusNotifierWatcher`
+2. `org.freedesktop.StatusNotifierWatcher` at `/StatusNotifierWatcher`
+3. `org.kde.StatusNotifierWatcher` at `/org/kde/StatusNotifierWatcher`
+4. `org.freedesktop.StatusNotifierWatcher` at `/org/freedesktop/StatusNotifierWatcher`
+
+If no watcher is available, `connect()` still exports the indicator object on D-Bus and returns without throwing. This lets your app continue running in environments where no indicator host is currently active.
+
 ## Building and Testing
 
 To run the tests:

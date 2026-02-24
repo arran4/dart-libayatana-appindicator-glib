@@ -4,7 +4,8 @@ import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
 class MockWatcher extends StatusNotifierWatcher {
   final List<String> registeredItems = [];
 
-  MockWatcher() : super(path: DBusObjectPath('/StatusNotifierWatcher'));
+  MockWatcher({String path = '/StatusNotifierWatcher'})
+      : super(path: DBusObjectPath(path));
 
   @override
   Future<DBusMethodResponse> doRegisterStatusNotifierItem(String service) async {
