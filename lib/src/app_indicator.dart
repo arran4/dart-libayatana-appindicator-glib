@@ -29,6 +29,14 @@ class SecondaryActivateEvent {
 }
 
 class AppIndicator {
+  static const List<_WatcherEndpoint> _watcherEndpoints = [
+    _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/StatusNotifierWatcher'),
+    _WatcherEndpoint('org.freedesktop.StatusNotifierWatcher', '/StatusNotifierWatcher'),
+    _WatcherEndpoint('org.kde.StatusNotifierWatcher', '/org/kde/StatusNotifierWatcher'),
+    _WatcherEndpoint(
+        'org.freedesktop.StatusNotifierWatcher', '/org/freedesktop/StatusNotifierWatcher'),
+  ];
+
   final String id;
   final DBusClient _client;
   final _AppIndicatorObject _object;
@@ -165,16 +173,24 @@ class AppIndicator {
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
 
-    // Connect to watcher
-    _watcher = StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher',
-        path: DBusObjectPath('/StatusNotifierWatcher'));
+    for (final endpoint in _watcherEndpoints) {
+      final candidate = StatusNotifierWatcher(_client, endpoint.destination,
+          path: DBusObjectPath(endpoint.path));
 
-    // Register
-    try {
-      await _watcher!.callRegisterStatusNotifierItem(_object.path.toString());
-    } catch (e) {
-      print('Failed to register with watcher: $e');
+      try {
+        // Probe before registering so we can support backends on different names/paths.
+        await candidate.getProtocolVersion();
+        await candidate.callRegisterStatusNotifierItem(_object.path.toString());
+        _watcher = candidate;
+        return;
+      } catch (_) {
+        // Try the next known watcher endpoint.
+      }
     }
+
+    // No known watcher backend is currently present. Keep the indicator available
+    // on D-Bus and return without throwing.
+    _watcher = null;
   }
 
   Future<void> close() async {
@@ -182,6 +198,13 @@ class AppIndicator {
     await _secondaryActivateController.close();
     await _client.close();
   }
+}
+
+class _WatcherEndpoint {
+  final String destination;
+  final String path;
+
+  const _WatcherEndpoint(this.destination, this.path);
 }
 
 class _AppIndicatorObject extends StatusNotifierItem {
