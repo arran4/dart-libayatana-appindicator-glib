@@ -1,18 +1,24 @@
 # Ayatana Application Indicator (Dart Port)
 
-A complete Dart port of [libayatana-appindicator](https://github.com/AyatanaIndicators/libayatana-appindicator).
+A Dart port of [libayatana-appindicator](https://github.com/AyatanaIndicators/libayatana-appindicator).
 
-This library allows applications to export a menu into an Application Indicators aware menu bar, implementing the StatusNotifierItem Specification (SNI). It uses DBus to communicate with the indicator service.
+This library allows applications to export a menu into an Application Indicators aware menu bar using the StatusNotifierItem Specification (SNI). It uses DBus to communicate with the indicator service.
 
 **Note:** This is a "hard port" from C to Dart. It does not bind to the C library but reimplements the protocol in pure Dart using the `dbus` package.
 
 ## Features
 
 -   **Pure Dart**: No native dependencies (other than DBus availability).
--   **StatusNotifierItem**: Implements the full SNI specification.
+-   **StatusNotifierItem**: Implements core SNI behavior needed for indicator integration.
 -   **Menus**: Exports menus via `org.gtk.Menus`.
 -   **Actions**: Exports actions via `org.gtk.Actions`.
 -   **Cross-platform**: Works on Linux environments with DBus (e.g., KDE Plasma, GNOME with AppIndicator support, XFCE, MATE).
+
+## Current limitations
+
+-   **Watcher-server behavior**: Service watcher/server coordination is not fully implemented in all edge cases.
+-   **Action/menu semantics**: Action and menu behavior currently covers only part of the full semantic surface.
+-   **Desktop-shell validation**: Compatibility has not yet been comprehensively validated across desktop shells.
 
 ## Usage
 
