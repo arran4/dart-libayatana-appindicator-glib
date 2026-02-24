@@ -1,0 +1,10 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    - camel_case_types
+    - library_prefixes
+    - non_constant_identifier_names
+    - constant_identifier_names
+    - directives_ordering
+    - lines_longer_than_80_chars
