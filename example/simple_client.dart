@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
 import 'package:dbus/dbus.dart';
 
 Future<void> main() async {
   var indicator = AppIndicator(
     id: 'example-simple-client',
-    iconName: 'indicator-messages',
+    iconName: 'demo-indicator',
     category: AppIndicatorCategory.applicationStatus,
   );
 
   indicator.status = AppIndicatorStatus.active;
-  indicator.attentionIconName = 'indicator-messages-new';
+
+  final iconThemePath = Platform.script.resolve('assets').toFilePath();
+  indicator.iconThemePath = iconThemePath;
+  indicator.attentionIconName = 'demo-indicator';
   indicator.label = '1%';
   indicator.labelGuide = '100%';
   indicator.title = 'Test Indicator (Dart)';
