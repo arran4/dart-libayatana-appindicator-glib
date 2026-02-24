@@ -168,7 +168,12 @@ void main() {
       ]
       ..attentionIconPixmaps = const [
         IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0xff, 0x00, 0x00]),
-      ];
+      ]
+      ..overlayIconName = 'overlay-name'
+      ..overlayIconPixmaps = const [
+        IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0x00, 0xff, 0x00]),
+      ]
+      ..attentionMovieName = 'attention-movie';
 
     await indicator.connect();
     await indicator.close();
