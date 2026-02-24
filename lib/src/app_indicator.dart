@@ -28,6 +28,31 @@ class SecondaryActivateEvent {
   SecondaryActivateEvent(this.x, this.y, [this.timestamp = 0]);
 }
 
+/// Event arguments for primary activation (left click/tap).
+class ActivateEvent {
+  final int x;
+  final int y;
+
+  const ActivateEvent(this.x, this.y);
+}
+
+/// Event arguments for context-menu requests (typically right click).
+class ContextMenuEvent {
+  final int x;
+  final int y;
+
+  const ContextMenuEvent(this.x, this.y);
+}
+
+/// Event arguments for XAyatana primary activation.
+class XAyatanaActivateEvent {
+  final int x;
+  final int y;
+  final int timestamp;
+
+  const XAyatanaActivateEvent(this.x, this.y, this.timestamp);
+}
+
 /// Error thrown when registering the status notifier item with the watcher fails.
 class AppIndicatorRegistrationException implements Exception {
   final Object cause;
@@ -59,8 +84,15 @@ class AppIndicator {
   final _scrollController = StreamController<ScrollEvent>.broadcast();
   final _secondaryActivateController =
       StreamController<SecondaryActivateEvent>.broadcast();
+  final _activateController = StreamController<ActivateEvent>.broadcast();
+  final _contextMenuController = StreamController<ContextMenuEvent>.broadcast();
+  final _xAyatanaActivateController =
+      StreamController<XAyatanaActivateEvent>.broadcast();
   bool _isConnected = false;
   final Set<_PendingSignal> _pendingSignals = <_PendingSignal>{};
+
+  DateTime? _lastPrimaryActivateAt;
+  Duration _doubleClickWindow = const Duration(milliseconds: 350);
 
   AppIndicator(
       {required this.id,
@@ -90,6 +122,24 @@ class AppIndicator {
     _object.onXAyatanaSecondaryActivate = (timestamp) {
       _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
     };
+
+    _object.onActivate = (x, y) {
+      _activateController.add(ActivateEvent(x, y));
+      _maybeDispatchDoubleClick();
+    };
+
+    _object.onContextMenu = (x, y) {
+      _contextMenuController.add(ContextMenuEvent(x, y));
+    };
+
+    _object.onXAyatanaActivate = (x, y, timestamp) {
+      _xAyatanaActivateController.add(XAyatanaActivateEvent(x, y, timestamp));
+      _maybeDispatchDoubleClick();
+    };
+  }
+
+  set doubleClickWindow(Duration value) {
+    _doubleClickWindow = value;
   }
 
   static String _cleanId(String id) {
@@ -247,12 +297,46 @@ class AppIndicator {
     _object.secondaryActivateTarget = actionName;
   }
 
+  void setPrimaryActivateTarget(String? actionName) {
+    _object.primaryActivateTarget = actionName;
+  }
+
+  void setDoubleClickTarget(String? actionName) {
+    _object.doubleClickTarget = actionName;
+  }
+
   // Events
   Stream<ScrollEvent> get scrollEvents => _scrollController.stream;
   Stream<SecondaryActivateEvent> get secondaryActivateEvents =>
       _secondaryActivateController.stream;
+  Stream<ActivateEvent> get activateEvents => _activateController.stream;
+  Stream<ContextMenuEvent> get contextMenuEvents => _contextMenuController.stream;
+  Stream<XAyatanaActivateEvent> get xAyatanaActivateEvents =>
+      _xAyatanaActivateController.stream;
+
+  Future<void> dispatchActivate({int x = 0, int y = 0}) async {
+    await _object.doActivate(x, y);
+  }
+
+  Future<void> dispatchSecondaryActivate({int x = 0, int y = 0}) async {
+    await _object.doSecondaryActivate(x, y);
+  }
+
+  Future<void> dispatchContextMenu({int x = 0, int y = 0}) async {
+    await _object.doContextMenu(x, y);
+  }
+
+  Future<void> dispatchScroll({required int delta, required String orientation}) async {
+    await _object.doScroll(delta, orientation);
+  }
+
+  Future<void> dispatchXAyatanaActivate(
+      {int x = 0, int y = 0, int timestamp = 0}) async {
+    await _object.doXAyatanaActivate(x, y, timestamp);
+  }
 
   Future<void> connect() async {
+
     await _client.registerObject(_object);
     _isConnected = true;
     await _flushPendingSignals();
@@ -270,16 +354,30 @@ class AppIndicator {
         await candidate.callRegisterStatusNotifierItem(_object.path.toString());
         _watcher = candidate;
         return;
-    } catch (error, stackTrace) {
-      throw AppIndicatorRegistrationException(error, stackTrace);
-      } catch (_) {
-        // Try the next known watcher endpoint.
+      } catch (error, stackTrace) {
+        if (_isWatcherUnavailable(error)) {
+          // Try the next known watcher endpoint.
+          continue;
+        }
+        throw AppIndicatorRegistrationException(error, stackTrace);
       }
     }
 
     // No known watcher backend is currently present. Keep the indicator available
     // on D-Bus and return without throwing.
     _watcher = null;
+  }
+
+
+  bool _isWatcherUnavailable(Object error) {
+    if (error is DBusMethodResponseException) {
+      final errorName = error.errorName;
+      return errorName == 'org.freedesktop.DBus.Error.ServiceUnknown' ||
+          errorName == 'org.freedesktop.DBus.Error.UnknownObject' ||
+          errorName == 'org.freedesktop.DBus.Error.UnknownMethod';
+    }
+
+    return false;
   }
 
   Future<void> close() async {
@@ -304,7 +402,22 @@ class AppIndicator {
 
     await _scrollController.close();
     await _secondaryActivateController.close();
+    await _activateController.close();
+    await _contextMenuController.close();
+    await _xAyatanaActivateController.close();
     await _client.close();
+  }
+
+  void _maybeDispatchDoubleClick() {
+    final now = DateTime.now();
+    final previous = _lastPrimaryActivateAt;
+    _lastPrimaryActivateAt = now;
+
+    if (previous == null || now.difference(previous) > _doubleClickWindow) {
+      return;
+    }
+
+    _object.handleDoubleClick();
   }
 
   void _queueSignal(_PendingSignal signal) {
@@ -372,10 +485,15 @@ class _AppIndicatorObject extends StatusNotifierItem {
   String toolTipDescription = '';
 
   String? secondaryActivateTarget;
+  String? primaryActivateTarget;
+  String? doubleClickTarget;
 
   Function(int, String)? onScroll;
   Function(int, int)? onSecondaryActivate;
   Function(int)? onXAyatanaSecondaryActivate;
+  Function(int, int)? onActivate;
+  Function(int, int)? onContextMenu;
+  Function(int, int, int)? onXAyatanaActivate;
 
   _AppIndicatorObject(DBusObjectPath path)
       : menuImpl = DBusMenu(path),
@@ -468,6 +586,41 @@ class _AppIndicatorObject extends StatusNotifierItem {
     return DBusMethodSuccessResponse([]);
   }
 
+  Future<DBusMethodResponse> doActivate(int x, int y) async {
+    _handlePrimaryAction();
+    onActivate?.call(x, y);
+    return DBusMethodSuccessResponse([]);
+  }
+
+  Future<DBusMethodResponse> doContextMenu(int x, int y) async {
+    onContextMenu?.call(x, y);
+    return DBusMethodSuccessResponse([]);
+  }
+
+  Future<DBusMethodResponse> doXAyatanaActivate(int x, int y, int timestamp) async {
+    _handlePrimaryAction();
+    onXAyatanaActivate?.call(x, y, timestamp);
+    return DBusMethodSuccessResponse([]);
+  }
+
+  void _handlePrimaryAction() {
+    if (primaryActivateTarget != null) {
+      var action = actionGroupImpl.getAction(primaryActivateTarget!);
+      if (action != null && action.enabled) {
+        action.activate(null);
+      }
+    }
+  }
+
+  void handleDoubleClick() {
+    if (doubleClickTarget != null) {
+      var action = actionGroupImpl.getAction(doubleClickTarget!);
+      if (action != null && action.enabled) {
+        action.activate(null);
+      }
+    }
+  }
+
   void _handleSecondaryAction() {
     if (secondaryActivateTarget != null) {
       var action = actionGroupImpl.getAction(secondaryActivateTarget!);
@@ -480,7 +633,40 @@ class _AppIndicatorObject extends StatusNotifierItem {
   // Delegate other interfaces
   @override
   List<DBusIntrospectInterface> introspect() {
-    var interfaces = super.introspect();
+    final interfaces = super.introspect();
+    final statusInterface = interfaces.firstWhere(
+      (interface) => interface.name == 'org.kde.StatusNotifierItem',
+    );
+
+    statusInterface.methods.addAll([
+      DBusIntrospectMethod(
+        'Activate',
+        args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+        ],
+      ),
+      DBusIntrospectMethod(
+        'ContextMenu',
+        args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+        ],
+      ),
+      DBusIntrospectMethod(
+        'XAyatanaActivate',
+        args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'y'),
+          DBusIntrospectArgument(
+            DBusSignature('u'),
+            DBusArgumentDirection.in_,
+            name: 'timestamp',
+          ),
+        ],
+      ),
+    ]);
+
     interfaces.addAll(menuImpl.introspect());
     interfaces.addAll(actionGroupImpl.introspect());
     return interfaces;
@@ -489,6 +675,28 @@ class _AppIndicatorObject extends StatusNotifierItem {
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
     if (methodCall.interface == 'org.kde.StatusNotifierItem') {
+      if (methodCall.name == 'Activate') {
+        if (methodCall.signature != DBusSignature('ii')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doActivate(methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+      }
+      if (methodCall.name == 'ContextMenu') {
+        if (methodCall.signature != DBusSignature('ii')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doContextMenu(methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+      }
+      if (methodCall.name == 'XAyatanaActivate') {
+        if (methodCall.signature != DBusSignature('iiu')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doXAyatanaActivate(
+          methodCall.values[0].asInt32(),
+          methodCall.values[1].asInt32(),
+          methodCall.values[2].asUint32(),
+        );
+      }
       return super.handleMethodCall(methodCall);
     } else if (methodCall.interface == 'org.gtk.Menus') {
       return menuImpl.handleMethodCall(methodCall);

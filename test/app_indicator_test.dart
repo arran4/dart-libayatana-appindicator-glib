@@ -1,23 +1,23 @@
 @TestOn('linux')
-import 'package:test/test.dart';
-import 'package:dbus/dbus.dart';
+import 'dart:async';
+
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
+import 'package:dbus/dbus.dart';
+import 'package:test/test.dart';
+
 import 'mock_watcher_impl.dart';
 
 void main() {
   test('AppIndicator connects and registers', () async {
     var client = DBusClient.session();
 
-    // Start mock watcher
     var watcher = MockWatcher();
     await client.registerObject(watcher);
     await client.requestName('org.kde.StatusNotifierWatcher');
 
-    // Create indicator
     var indicator = AppIndicator(id: 'test-indicator');
     await indicator.connect();
 
-    // Allow some time for async calls
     await Future.delayed(Duration(milliseconds: 200));
 
     expect(
@@ -62,17 +62,6 @@ void main() {
     await indicator.close();
   });
 
-  test('AppIndicator properties', () {
-    var indicator = AppIndicator(id: 'prop-indicator');
-    indicator.title = 'Title';
-    indicator.iconName = 'Icon';
-    indicator.tooltipTitle = 'TipTitle';
-
-    // We assume setters work as they modify internal state which DBus object reads.
-    // Since we can't easily introspect loopback DBus without knowing unique name,
-    // and we don't want to expose internal object, we trust the implementation (verified by code review).
-  });
-
   test('AppIndicator sanitizes ids to valid non-empty DBus path segments', () async {
     var client = DBusClient.session();
 
@@ -100,5 +89,66 @@ void main() {
     await emptyAfterSanitize.close();
     await leadingDigit.close();
     await client.close();
+  });
+
+  test('AppIndicator dispatch emits interaction events', () async {
+    var indicator = AppIndicator(id: 'event-indicator');
+
+    final activate = Completer<ActivateEvent>();
+    final secondary = Completer<SecondaryActivateEvent>();
+    final context = Completer<ContextMenuEvent>();
+    final scroll = Completer<ScrollEvent>();
+
+    final subscriptions = [
+      indicator.activateEvents.listen(activate.complete),
+      indicator.secondaryActivateEvents.listen(secondary.complete),
+      indicator.contextMenuEvents.listen(context.complete),
+      indicator.scrollEvents.listen(scroll.complete),
+    ];
+
+    await indicator.dispatchActivate(x: 10, y: 11);
+    await indicator.dispatchSecondaryActivate(x: 12, y: 13);
+    await indicator.dispatchContextMenu(x: 14, y: 15);
+    await indicator.dispatchScroll(delta: 3, orientation: 'vertical');
+
+    expect((await activate.future).x, 10);
+    expect((await secondary.future).y, 13);
+    expect((await context.future).x, 14);
+    expect((await scroll.future).delta, 3);
+
+    for (final subscription in subscriptions) {
+      await subscription.cancel();
+    }
+    await indicator.close();
+  });
+
+  test('AppIndicator click targets trigger actions', () async {
+    var indicator = AppIndicator(id: 'action-target-indicator');
+
+    var primaryCount = 0;
+    var secondaryCount = 0;
+    var doubleClickCount = 0;
+
+    indicator.setActions([
+      DBusAction('primary', onActivate: (_) => primaryCount++),
+      DBusAction('secondary', onActivate: (_) => secondaryCount++),
+      DBusAction('double', onActivate: (_) => doubleClickCount++),
+    ]);
+
+    indicator
+      ..setPrimaryActivateTarget('primary')
+      ..setSecondaryActivateTarget('secondary')
+      ..setDoubleClickTarget('double')
+      ..doubleClickWindow = const Duration(milliseconds: 750);
+
+    await indicator.dispatchActivate();
+    await indicator.dispatchSecondaryActivate();
+    await indicator.dispatchActivate();
+
+    expect(primaryCount, 2);
+    expect(secondaryCount, 1);
+    expect(doubleClickCount, 1);
+
+    await indicator.close();
   });
 }
