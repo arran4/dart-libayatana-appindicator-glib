@@ -194,7 +194,7 @@ class AppIndicator {
 
   static String _buildServiceName(String id) {
     final cleaned = _cleanId(id).toLowerCase();
-    return 'org.ayatana.appindicator.$cleaned.$pid';
+    return 'org.ayatana.appindicator.$cleaned.p$pid';
   }
 
   // Properties setters
