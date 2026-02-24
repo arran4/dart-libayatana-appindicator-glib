@@ -27,16 +27,20 @@ dependencies:
 ### Example
 
 ```dart
+import 'dart:io';
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
 import 'package:dbus/dbus.dart';
 
 Future<void> main() async {
   var indicator = AppIndicator(
     id: 'my-indicator',
-    iconName: 'indicator-messages',
+    iconName: 'demo-indicator',
   );
 
   indicator.status = AppIndicatorStatus.active;
+
+  final iconThemePath = Platform.script.resolve('assets').toFilePath();
+  indicator.iconThemePath = iconThemePath;
   indicator.title = 'My Indicator';
 
   // Add actions
@@ -56,6 +60,7 @@ Future<void> main() async {
 ```
 
 See `example/simple_client.dart` for a complete example.
+The bundled demo icon is located at `example/assets/demo-indicator.svg` and is loaded via `iconThemePath` so the sample does not depend on host icon themes.
 
 ## Building and Testing
 
