@@ -230,20 +230,6 @@ class _AppIndicatorObject extends StatusNotifierItem {
   final DBusMenu menuImpl;
   final DBusActionGroup actionGroupImpl;
 
-  String id = '';
-  String category = 'ApplicationStatus';
-  String status = 'Passive';
-  String iconName = '';
-  String attentionIconName = '';
-  String iconAccessibleDesc = '';
-  String attentionAccessibleDesc = '';
-  String title = '';
-  String iconThemePath = '';
-  DBusObjectPath menu = DBusObjectPath.root;
-  String xAyatanaLabel = '';
-  String xAyatanaLabelGuide = '';
-  int xAyatanaOrderingIndex = 0;
-
   // Tooltip
   String toolTipIconName = '';
   String toolTipTitle = '';
@@ -317,9 +303,9 @@ class _AppIndicatorObject extends StatusNotifierItem {
   Future<DBusMethodResponse> getToolTip() async {
     return DBusMethodSuccessResponse([
       DBusStruct([
-        DBusString(toolTipIconName.isEmpty ? iconName : toolTipIconName),
+        DBusString(toolTipIconName),
         DBusArray(DBusSignature('(iiay)'), []),
-        DBusString(toolTipTitle.isEmpty ? title : toolTipTitle),
+        DBusString(toolTipTitle),
         DBusString(toolTipDescription)
       ])
     ]);
