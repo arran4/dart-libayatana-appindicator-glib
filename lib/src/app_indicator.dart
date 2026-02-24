@@ -861,7 +861,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
       return response;
     }
 
-    final dict = response.returnValues[0].asStringVariantDict().toMap();
+    final dict =
+        Map<String, DBusValue>.from(response.returnValues[0].asStringVariantDict());
     dict['WindowId'] = (await getWindowId()).returnValues[0];
     dict['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
     dict['IconPixmap'] = (await getIconPixmap()).returnValues[0];
