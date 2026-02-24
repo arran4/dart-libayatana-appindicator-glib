@@ -1,54 +1,81 @@
-# Ayatana Application Indicator (Shared Library) [![Build Status](https://api.travis-ci.com/AyatanaIndicators/libayatana-appindicator.svg)](https://travis-ci.com/github/AyatanaIndicators/libayatana-appindicator)
+# Ayatana Application Indicator (Dart Port)
 
-## About Ayatana Indicators
+A complete Dart port of [libayatana-appindicator](https://github.com/AyatanaIndicators/libayatana-appindicator).
 
-The Ayatana Indicators project is the continuation of Application
-Indicators and System Indicators, two technologies developed by Canonical
-Ltd. for the Unity7 desktop.
+This library allows applications to export a menu into an Application Indicators aware menu bar, implementing the StatusNotifierItem Specification (SNI). It uses DBus to communicate with the indicator service.
 
-Application Indicators are a GTK implementation of the StatusNotifierItem
-Specification (SNI) that was originally submitted to freedesktop.org by
-KDE.
+**Note:** This is a "hard port" from C to Dart. It does not bind to the C library but reimplements the protocol in pure Dart using the `dbus` package.
 
-System Indicators are an extensions to the Application Indicators idea.
-System Indicators allow for far more widgets to be displayed in the
-indicator's menu.
+## Features
 
-The Ayatana Indicators project is the new upstream for application
-indicators, system indicators and associated projects with a focus on
-making Ayatana Indicators a desktop agnostic technology.
+-   **Pure Dart**: No native dependencies (other than DBus availability).
+-   **StatusNotifierItem**: Implements the full SNI specification.
+-   **Menus**: Exports menus via `org.gtk.Menus`.
+-   **Actions**: Exports actions via `org.gtk.Actions`.
+-   **Cross-platform**: Works on Linux environments with DBus (e.g., KDE Plasma, GNOME with AppIndicator support, XFCE, MATE).
 
-On GNU/Linux, Ayatana Indicators are currently available for desktop
-envinronments like MATE (used by default in [Ubuntu
-MATE](https://ubuntu-mate.com)), XFCE (used by default in
-[Xubuntu](https://bluesabre.org/2021/02/25/xubuntu-21-04-progress-update/),
-LXDE, and the Budgie Desktop).
+## Usage
 
-The Lomiri Operating Environment (UI of the Ubuntu Touch OS, formerly
-known as Unity8) uses Ayatana Indicators for rendering its notification
-area and the [UBports](https://ubports.com) project is a core contributor
-to the Ayatana Indicators project.
+Add `ayatana_appindicator` to your `pubspec.yaml`:
 
-For further info, please visit:
-https://ayatana-indicators.org
+```yaml
+dependencies:
+  ayatana_appindicator:
+    path: . # or git url
+```
 
-## The Ayatana Application Indicator (Shared Library)
+### Example
 
-A library to allow applications to export a menu into an Application
-Indicators aware menu bar. Although based on SNI, this new GLib-only
-reimplementation uses Gio menus and actions (exported to org.gtk.Menus
-and org.gtk.Actions) instead of the old dbusmenu (formerly exported to
-com.canonical.dbusmenu).
+```dart
+import 'package:ayatana_appindicator/ayatana_appindicator.dart';
+import 'package:dbus/dbus.dart';
 
-This code project was originally started by Canonical Ltd. and has been
-adapted by various authors with the purpose of making this Application
-Indicators available on Ubuntu and non-Ubuntu systems alike.
+Future<void> main() async {
+  var indicator = AppIndicator(
+    id: 'my-indicator',
+    iconName: 'indicator-messages',
+  );
 
-## Licence and Copyright
+  indicator.status = AppIndicatorStatus.active;
+  indicator.title = 'My Indicator';
 
-See COPYING and AUTHORS file in this project.
+  // Add actions
+  var actions = [
+    DBusAction('quit', onActivate: (_) => indicator.close()),
+  ];
+  indicator.setActions(actions);
+
+  // Add menu
+  var menu = [
+    DBusMenuItem({'label': DBusString('Quit'), 'action': DBusString('app.quit')}, {}),
+  ];
+  indicator.setMenu(menu);
+
+  await indicator.connect();
+}
+```
+
+See `example/simple_client.dart` for a complete example.
 
 ## Building and Testing
 
-For instructions on building and running built-in tests, see the
-INSTALL.md file.
+To run the tests:
+
+```bash
+dart test
+```
+
+To run the example (requires a session bus):
+
+```bash
+dart run example/simple_client.dart
+```
+
+## License
+
+GNU General Public License version 3 (GPL-3.0). See `COPYING` for details.
+
+## Authors
+
+Original library by Canonical Ltd. and Robert Tari.
+Dart port by [Your Name/Entity].
