@@ -26,6 +26,13 @@ void main() {
     await client.close();
   });
 
+
+  test('AppIndicator close is idempotent', () async {
+    var indicator = AppIndicator(id: 'close-idempotent');
+
+    await indicator.close();
+    await indicator.close();
+  });
   test('AppIndicator properties', () {
       var indicator = AppIndicator(id: 'prop-indicator');
       indicator.title = 'Title';

@@ -33,6 +33,8 @@ class AppIndicator {
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
+  bool _isDisposed = false;
+  Future<void>? _closeFuture;
 
   // Stream controllers
   final _scrollController = StreamController<ScrollEvent>.broadcast();
@@ -177,10 +179,30 @@ class AppIndicator {
     }
   }
 
-  Future<void> close() async {
-    await _scrollController.close();
-    await _secondaryActivateController.close();
-    await _client.close();
+  Future<void> close() {
+    if (_closeFuture != null) {
+      return _closeFuture!;
+    }
+
+    _closeFuture = () async {
+      if (_isDisposed) {
+        return;
+      }
+
+      _isDisposed = true;
+
+      if (!_scrollController.isClosed) {
+        await _scrollController.close();
+      }
+
+      if (!_secondaryActivateController.isClosed) {
+        await _secondaryActivateController.close();
+      }
+
+      await _client.close();
+    }();
+
+    return _closeFuture!;
   }
 }
 
