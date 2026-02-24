@@ -23,6 +23,12 @@ void main() {
     expect(watcher.registeredItems, contains(contains('/org/ayatana/appindicator/test_indicator')));
 
     await indicator.close();
+
+    expect(
+      watcher.unregisteredItems,
+      contains(contains('/org/ayatana/appindicator/test_indicator')),
+    );
+
     await client.close();
   });
 

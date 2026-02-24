@@ -178,6 +178,25 @@ class AppIndicator {
   }
 
   Future<void> close() async {
+    if (_watcher != null) {
+      // The SNI watcher protocol does not define an explicit unregister call in
+      // all implementations. Try a best-effort remote teardown first so modern
+      // watchers can remove the item before we drop our DBus resources.
+      try {
+        await _watcher!.callMethod(
+            'org.kde.StatusNotifierWatcher',
+            'UnregisterStatusNotifierItem',
+            [DBusString(_object.path.toString())],
+            replySignature: DBusSignature(''));
+      } catch (_) {
+        // Fallback behavior for protocol variants without unregister support:
+        // just continue with local teardown (object/resources first, client
+        // connection last). Closing our DBus connection implicitly releases the
+        // exported object and unique name ownership.
+      }
+      _watcher = null;
+    }
+
     await _scrollController.close();
     await _secondaryActivateController.close();
     await _client.close();
