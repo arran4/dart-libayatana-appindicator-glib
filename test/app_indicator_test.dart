@@ -20,20 +20,50 @@ void main() {
     // Allow some time for async calls
     await Future.delayed(Duration(milliseconds: 200));
 
-    expect(watcher.registeredItems, contains(contains('/org/ayatana/appindicator/test_indicator')));
+    expect(
+      watcher.registeredItems,
+      contains(contains('/org/ayatana/appindicator/test_indicator')),
+    );
 
     await indicator.close();
     await client.close();
   });
 
-  test('AppIndicator properties', () {
-      var indicator = AppIndicator(id: 'prop-indicator');
-      indicator.title = 'Title';
-      indicator.iconName = 'Icon';
-      indicator.tooltipTitle = 'TipTitle';
+  test('AppIndicator probes alternate watcher backends', () async {
+    var client = DBusClient.session();
 
-      // We assume setters work as they modify internal state which DBus object reads.
-      // Since we can't easily introspect loopback DBus without knowing unique name,
-      // and we don't want to expose internal object, we trust the implementation (verified by code review).
+    var watcher = MockWatcher(path: '/org/freedesktop/StatusNotifierWatcher');
+    await client.registerObject(watcher);
+    await client.requestName('org.freedesktop.StatusNotifierWatcher');
+
+    var indicator = AppIndicator(id: 'freedesktop-indicator');
+    await indicator.connect();
+
+    await Future.delayed(Duration(milliseconds: 200));
+
+    expect(watcher.registeredItems,
+        contains(contains('/org/ayatana/appindicator/freedesktop_indicator')));
+
+    await indicator.close();
+    await client.close();
+  });
+
+  test('AppIndicator connect does not throw when watcher is unavailable', () async {
+    var indicator = AppIndicator(id: 'missing-watcher');
+
+    await indicator.connect();
+
+    await indicator.close();
+  });
+
+  test('AppIndicator properties', () {
+    var indicator = AppIndicator(id: 'prop-indicator');
+    indicator.title = 'Title';
+    indicator.iconName = 'Icon';
+    indicator.tooltipTitle = 'TipTitle';
+
+    // We assume setters work as they modify internal state which DBus object reads.
+    // Since we can't easily introspect loopback DBus without knowing unique name,
+    // and we don't want to expose internal object, we trust the implementation (verified by code review).
   });
 }
