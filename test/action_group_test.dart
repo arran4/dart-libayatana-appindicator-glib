@@ -13,7 +13,7 @@ void main() {
     // Test Describe
     var call = DBusMethodCall(
       sender: 'sender',
-      interface: 'org.gtk.Actions',
+      interface: gtkActionsInterface,
       name: 'Describe',
       values: [DBusString('test')],
     );
@@ -30,7 +30,7 @@ void main() {
     // Test Activate
     var activateCall = DBusMethodCall(
       sender: 'sender',
-      interface: 'org.gtk.Actions',
+      interface: gtkActionsInterface,
       name: 'Activate',
       values: [
         DBusString('test'),
@@ -52,7 +52,7 @@ void main() {
 
     var describeCall = DBusMethodCall(
       sender: 'sender',
-      interface: 'org.gtk.Actions',
+      interface: gtkActionsInterface,
       name: 'Describe',
       values: [DBusString('one')],
     );
@@ -71,7 +71,7 @@ void main() {
 
     var describeCall = DBusMethodCall(
       sender: 'sender',
-      interface: 'org.gtk.Actions',
+      interface: gtkActionsInterface,
       name: 'Describe',
       values: [DBusString('toggle')],
     );

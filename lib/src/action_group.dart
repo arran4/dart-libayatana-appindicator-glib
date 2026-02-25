@@ -1,5 +1,7 @@
 import 'package:dbus/dbus.dart';
 
+const String gtkActionsInterface = 'org.gtk.Actions';
+
 class DBusActionGroup extends DBusObject {
   final Map<String, DBusAction> _actions = {};
 
@@ -17,7 +19,7 @@ class DBusActionGroup extends DBusObject {
   List<DBusIntrospectInterface> introspect() {
     return [
       DBusIntrospectInterface(
-        'org.gtk.Actions',
+        gtkActionsInterface,
         methods: [
           DBusIntrospectMethod('Describe', args: [
             DBusIntrospectArgument(
@@ -50,7 +52,7 @@ class DBusActionGroup extends DBusObject {
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface != 'org.gtk.Actions') {
+    if (methodCall.interface != gtkActionsInterface) {
       return DBusMethodErrorResponse.unknownInterface();
     }
 
