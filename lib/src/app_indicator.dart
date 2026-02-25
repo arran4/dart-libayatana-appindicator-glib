@@ -163,7 +163,7 @@ class AppIndicator {
   static String _sanitizeId(String id) {
     var sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
     if (sanitized.isEmpty || sanitized.replaceAll('_', '').isEmpty) {
-      final hash = md5.convert(utf8.encode(id)).toString().substring(0, 8);
+      final hash = sha256.convert(utf8.encode(id)).toString().substring(0, 8);
       return 'indicator_$hash';
     }
     if (sanitized.startsWith(RegExp(r'[0-9]'))) {

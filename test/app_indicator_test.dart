@@ -172,7 +172,7 @@ void main() {
     expect(
       MockWatcher.registeredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')),
+          r'^org\.ayatana\.appindicator\.indicator_e84c538e\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_e84c538e)?$')),
     );
     expect(
       MockWatcher.registeredItems,
