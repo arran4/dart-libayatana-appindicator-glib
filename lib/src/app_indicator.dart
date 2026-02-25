@@ -310,6 +310,10 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newIconThemePath);
   }
 
+  bool _looksLikePath(String name) {
+    return name.contains(Platform.pathSeparator);
+  }
+
   void _updatePaths() {
     final currentIcon = (status == AppIndicatorStatus.attention)
         ? (_rawAttentionIconName.isNotEmpty
@@ -317,10 +321,8 @@ class AppIndicator {
             : _rawIconName)
         : _rawIconName;
 
-    if (currentIcon.startsWith('/')) {
-      final lastSlash = currentIcon.lastIndexOf('/');
-      final dir = currentIcon.substring(0, lastSlash);
-      _object.iconThemePath = dir;
+    if (_looksLikePath(currentIcon)) {
+      _object.iconThemePath = File(currentIcon).absolute.parent.path;
     }
 
     // Update DBus names
@@ -329,9 +331,9 @@ class AppIndicator {
   }
 
   String _processIconName(String name) {
-    if (name.startsWith('/')) {
-      final lastSlash = name.lastIndexOf('/');
-      var base = name.substring(lastSlash + 1);
+    if (_looksLikePath(name)) {
+      final lastSep = name.lastIndexOf(Platform.pathSeparator);
+      var base = name.substring(lastSep + 1);
       if (base.contains('.')) {
         base = base.substring(0, base.lastIndexOf('.'));
       }
