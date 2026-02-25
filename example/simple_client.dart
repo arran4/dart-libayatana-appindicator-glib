@@ -30,7 +30,6 @@ Future<void> main() async {
   var percentage = 1;
   var showLabel = true;
   var attentionActive = false;
-  var lastPrimaryClick = DateTime.fromMillisecondsSinceEpoch(0);
 
   void updateLabel() {
     indicator.label = showLabel ? '$percentage%' : '';
@@ -59,27 +58,15 @@ Future<void> main() async {
     }),
   ]);
 
-  // Set up event listeners
-  indicator.activateEvents.listen((event) {
-    final now = DateTime.now();
-    final elapsed = now.difference(lastPrimaryClick).inMilliseconds;
-    lastPrimaryClick = now;
-    log('Primary activation @(${event.x}, ${event.y}) delta=${elapsed}ms');
-  });
-
-  indicator.secondaryActivateEvents.listen((event) {
-    log('Secondary activation @(${event.x}, ${event.y}) ts=${event.timestamp}');
-  });
-
-  indicator.contextMenuEvents.listen((event) {
-    log('Context menu @(${event.x}, ${event.y})');
-  });
-
-  indicator.scrollEvents.listen((event) {
-    log('Scroll event: delta=${event.delta}, orientation=${event.orientation}');
-    percentage = (percentage + event.delta).clamp(0, 100);
+  // Set up event callbacks (Simplified API)
+  indicator.onActivate = (x, y) => log('Primary activation @($x, $y)');
+  indicator.onSecondaryActivate = (x, y) => log('Secondary activation @($x, $y)');
+  indicator.onContextMenu = (x, y) => log('Context menu @($x, $y)');
+  indicator.onScroll = (delta, orientation) {
+    log('Scroll event: delta=$delta, orientation=$orientation');
+    percentage = (percentage + delta).clamp(0, 100);
     updateLabel();
-  });
+  };
 
   await indicator.connect();
   log('Connected to D-Bus and registered with watcher.');

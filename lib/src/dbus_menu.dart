@@ -6,6 +6,8 @@ class DBusMenu extends DBusObject {
 
   DBusMenu(DBusObjectPath path, this._rootItems) : super(path);
 
+  List<DBusMenuItem> get items => _rootItems;
+
   @override
   List<DBusIntrospectInterface> introspect() {
     return [
@@ -96,7 +98,7 @@ class DBusMenu extends DBusObject {
     var children = <DBusValue>[];
 
     if (id == 0) {
-      children = _rootItems.asMap().entries.map((e) => _buildItem(e.key + 1, e.value)).toList();
+      children = _rootItems.map((item) => _buildItem(item)).toList();
     }
 
     return DBusStruct([
@@ -106,19 +108,29 @@ class DBusMenu extends DBusObject {
     ]);
   }
 
-  DBusValue _buildItem(int id, DBusMenuItem item) {
+  DBusValue _buildItem(DBusMenuItem item) {
     return DBusStruct([
-      DBusInt32(id),
+      DBusInt32(item.id),
       DBusDict.stringVariant(item.properties),
-      DBusArray(DBusSignature('v'), []),
+      DBusArray(DBusSignature('v'), item.children.map((c) => DBusVariant(_buildItem(c))).toList()),
     ]);
   }
 
   Future<DBusMethodResponse> _handleEvent(int id, String eventId) async {
-    if (eventId == 'clicked' && id > 0 && id <= _rootItems.length) {
-      _rootItems[id - 1].onActivated?.call();
+    if (eventId == 'clicked') {
+      final item = _findItemById(_rootItems, id);
+      item?.onActivated?.call();
     }
     return DBusMethodSuccessResponse([]);
+  }
+
+  DBusMenuItem? _findItemById(List<DBusMenuItem> items, int id) {
+    for (final item in items) {
+      if (item.id == id) return item;
+      final found = _findItemById(item.children, id);
+      if (found != null) return found;
+    }
+    return null;
   }
 
   void updateItems(List<DBusMenuItem> items) {
@@ -130,12 +142,23 @@ class DBusMenu extends DBusObject {
 }
 
 class DBusMenuItem {
+  final int id;
   final Map<String, DBusValue> properties;
+  final List<DBusMenuItem> children;
   final void Function()? onActivated;
 
-  DBusMenuItem(this.properties, {this.onActivated});
+  DBusMenuItem({
+    this.id = 0,
+    required this.properties,
+    this.children = const [],
+    this.onActivated,
+  });
 
-  factory DBusMenuItem.label(String label, {void Function()? onActivated}) {
-    return DBusMenuItem({'label': DBusString(label)}, onActivated: onActivated);
+  factory DBusMenuItem.label(String label, {int id = 0, void Function()? onActivated}) {
+    return DBusMenuItem(
+      id: id,
+      properties: {'label': DBusString(label)},
+      onActivated: onActivated,
+    );
   }
 }

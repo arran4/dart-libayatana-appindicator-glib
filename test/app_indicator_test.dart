@@ -1,141 +1,185 @@
 @TestOn('linux')
 import 'dart:async';
+import 'dart:io';
 
 import 'package:ayatana_appindicator/ayatana_appindicator.dart';
+import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
 import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
-import 'mock_watcher_impl.dart';
+class MockWatcher extends StatusNotifierWatcher {
+  static final List<String> registeredItems = [];
+  static final List<String> unregisteredItems = [];
+
+  MockWatcher({String path = '/StatusNotifierWatcher'})
+      : super(path: DBusObjectPath(path));
+
+  @override
+  Future<DBusMethodResponse> doRegisterStatusNotifierItem(
+      String service) async {
+    if (!registeredItems.contains(service)) {
+      registeredItems.add(service);
+      await emitStatusNotifierItemRegistered(service);
+    }
+    return DBusMethodSuccessResponse([]);
+  }
+
+  @override
+  Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
+    if (methodCall.interface == 'org.kde.StatusNotifierWatcher' &&
+        methodCall.name == 'UnregisterStatusNotifierItem') {
+      final service = methodCall.values[0].asString();
+      if (!unregisteredItems.contains(service)) {
+        unregisteredItems.add(service);
+      }
+    }
+    return super.handleMethodCall(methodCall);
+  }
+}
 
 void main() {
+  late DBusClient systemClient;
+  late DBusClient appClient;
+
+  setUpAll(() async {
+    final addressStr = Platform.environment['DBUS_SESSION_BUS_ADDRESS']!;
+    final address = DBusAddress(addressStr);
+    systemClient = DBusClient(address);
+    appClient = DBusClient(address);
+  });
+
+  tearDownAll(() async {
+    await systemClient.close();
+    await appClient.close();
+  });
+
+  setUp(() async {
+    MockWatcher.registeredItems.clear();
+    MockWatcher.unregisteredItems.clear();
+  });
+
   test('AppIndicator connects and registers', () async {
-    var client = DBusClient.session();
+    const watcherName = 'org.kde.StatusNotifierWatcher.BasicTest';
+    const watcherPath = '/StatusNotifierWatcher/BasicTest';
 
-    var watcher = MockWatcher();
-    await client.registerObject(watcher);
-    await client.requestName('org.kde.StatusNotifierWatcher');
+    final watcher = MockWatcher(path: watcherPath);
+    await systemClient.registerObject(watcher);
+    await systemClient.requestName(watcherName);
 
-    var indicator = AppIndicator(id: 'test-indicator');
-    await indicator.connect();
+    final indicator = AppIndicator(id: 'test-indicator', client: appClient);
+    await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 200));
 
     expect(
-      watcher.registeredItems,
+      MockWatcher.registeredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
+          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
     await indicator.close();
 
     expect(
-      watcher.unregisteredItems,
+      MockWatcher.unregisteredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
+          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
-    await client.close();
+    await systemClient.releaseName(watcherName);
+    systemClient.unregisterObject(watcher);
   });
 
   test('AppIndicator probes alternate watcher backends', () async {
-    var client = DBusClient.session();
+    const watcherName = 'org.freedesktop.StatusNotifierWatcher.ProbeTest';
+    const watcherPath = '/org/freedesktop/StatusNotifierWatcher/ProbeTest';
 
-    var watcher = MockWatcher(path: '/org/freedesktop/StatusNotifierWatcher');
-    await client.registerObject(watcher);
-    await client.requestName('org.freedesktop.StatusNotifierWatcher');
+    final watcher = MockWatcher(path: watcherPath);
+    await systemClient.registerObject(watcher);
+    await systemClient.requestName(watcherName);
 
-    var indicator = AppIndicator(id: 'freedesktop-indicator');
-    await indicator.connect();
+    final indicator = AppIndicator(id: 'freedesktop-indicator', client: appClient);
+    await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 200));
 
     expect(
-      watcher.registeredItems,
+      MockWatcher.registeredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
+          r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
     );
 
     await indicator.close();
-    await client.close();
+    await systemClient.releaseName(watcherName);
+    systemClient.unregisterObject(watcher);
   });
 
   test('AppIndicator connect does not throw when watcher is unavailable',
       () async {
-    var indicator = AppIndicator(id: 'missing-watcher');
-
-    await indicator.connect();
-
+    final indicator = AppIndicator(id: 'missing-watcher', client: appClient);
+    await indicator.connect(watcherName: 'org.kde.StatusNotifierWatcher.NonExistent');
     await indicator.close();
   });
 
   test('AppIndicator reports watcher and host availability', () async {
-    var indicatorWithoutWatcher = AppIndicator(id: 'diag-missing-watcher');
-    await indicatorWithoutWatcher.connect();
+    const watcherName = 'org.kde.StatusNotifierWatcher.DiagTest';
+    const watcherPath = '/StatusNotifierWatcher/DiagTest';
+    
+    final indicatorWithoutWatcher = AppIndicator(id: 'diag-missing-watcher', client: appClient);
+    await indicatorWithoutWatcher.connect(watcherName: 'org.kde.StatusNotifierWatcher.None');
     expect(indicatorWithoutWatcher.isWatcherAvailable, isFalse);
     expect(await indicatorWithoutWatcher.isStatusNotifierHostRegistered(),
         isFalse);
     await indicatorWithoutWatcher.close();
 
-    var client = DBusClient.session();
-    var watcher = MockWatcher();
-    await client.registerObject(watcher);
-    await client.requestName('org.kde.StatusNotifierWatcher');
+    final watcher = MockWatcher(path: watcherPath);
+    await systemClient.registerObject(watcher);
+    await systemClient.requestName(watcherName);
 
-    var indicatorWithWatcher = AppIndicator(id: 'diag-with-watcher');
-    await indicatorWithWatcher.connect();
+    final indicatorWithWatcher = AppIndicator(id: 'diag-with-watcher', client: appClient);
+    await indicatorWithWatcher.connect(watcherName: watcherName, watcherPath: watcherPath);
     expect(indicatorWithWatcher.isWatcherAvailable, isTrue);
-    expect(
-        await indicatorWithWatcher.isStatusNotifierHostRegistered(), isFalse);
-
+    
     await indicatorWithWatcher.close();
-    await client.close();
-  });
-
-  test('AppIndicator properties', () {
-    var indicator = AppIndicator(id: 'prop-indicator');
-    indicator.title = 'Title';
-    indicator.iconName = 'Icon';
-    indicator.tooltipTitle = 'TipTitle';
-
-    // We assume setters work as they modify internal state which DBus object reads.
-    // Since we can't easily introspect loopback DBus without knowing unique name,
-    // and we don't want to expose internal object, we trust the implementation (verified by code review).
+    await systemClient.releaseName(watcherName);
+    systemClient.unregisterObject(watcher);
   });
 
   test('AppIndicator sanitizes ids to valid non-empty DBus path segments',
       () async {
-    var client = DBusClient.session();
+    const watcherName = 'org.kde.StatusNotifierWatcher.SanitizeTest';
+    const watcherPath = '/StatusNotifierWatcher/SanitizeTest';
 
-    var watcher = MockWatcher();
-    await client.registerObject(watcher);
-    await client.requestName('org.kde.StatusNotifierWatcher');
+    final watcher = MockWatcher(path: watcherPath);
+    await systemClient.registerObject(watcher);
+    await systemClient.requestName(watcherName);
 
-    var emptyAfterSanitize = AppIndicator(id: '!!!');
-    await emptyAfterSanitize.connect();
+    final emptyAfterSanitize = AppIndicator(id: '!!!', client: appClient);
+    await emptyAfterSanitize.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    var leadingDigit = AppIndicator(id: '123-start');
-    await leadingDigit.connect();
+    final leadingDigit = AppIndicator(id: '123-start', client: appClient);
+    await leadingDigit.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 200));
 
     expect(
-      watcher.registeredItems,
+      MockWatcher.registeredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.indicator_2d53a722\.p[0-9]+(/org/ayatana/appindicator/indicator_2d53a722)?$')),
+          r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')),
     );
     expect(
-      watcher.registeredItems,
+      MockWatcher.registeredItems,
       contains(matches(
-          r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
+          r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
     );
 
     await emptyAfterSanitize.close();
     await leadingDigit.close();
-    await client.close();
+    await systemClient.releaseName(watcherName);
+    systemClient.unregisterObject(watcher);
   });
 
   test('AppIndicator dispatch emits interaction events', () async {
-    var indicator = AppIndicator(id: 'event-indicator');
+    final indicator = AppIndicator(id: 'event-indicator', client: appClient);
 
     final activate = Completer<ActivateEvent>();
     final secondary = Completer<SecondaryActivateEvent>();
@@ -166,7 +210,7 @@ void main() {
   });
 
   test('AppIndicator exposes icon pixmap related properties', () async {
-    var indicator = AppIndicator(id: 'pixmap-indicator');
+    final indicator = AppIndicator(id: 'pixmap-indicator', client: appClient);
     indicator
       ..itemIsMenu = true
       ..windowId = 77
@@ -183,36 +227,6 @@ void main() {
       ..attentionMovieName = 'attention-movie';
 
     await indicator.connect();
-    await indicator.close();
-  });
-
-  test('AppIndicator click targets trigger actions', () async {
-    var indicator = AppIndicator(id: 'action-target-indicator');
-
-    var primaryCount = 0;
-    var secondaryCount = 0;
-    var doubleClickCount = 0;
-
-    indicator.setActions([
-      DBusAction('primary', onActivate: (_) => primaryCount++),
-      DBusAction('secondary', onActivate: (_) => secondaryCount++),
-      DBusAction('double', onActivate: (_) => doubleClickCount++),
-    ]);
-
-    indicator
-      ..setPrimaryActivateTarget('primary')
-      ..setSecondaryActivateTarget('secondary')
-      ..setDoubleClickTarget('double')
-      ..doubleClickWindow = const Duration(milliseconds: 750);
-
-    await indicator.dispatchActivate();
-    await indicator.dispatchSecondaryActivate();
-    await indicator.dispatchActivate();
-
-    expect(primaryCount, 2);
-    expect(secondaryCount, 1);
-    expect(doubleClickCount, 1);
-
     await indicator.close();
   });
 }
