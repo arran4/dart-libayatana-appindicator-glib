@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:dbus/dbus.dart';
 
 import 'action_group.dart';
+import 'dbus_menu.dart' as dm;
 import 'enums.dart';
-import 'menu.dart';
 import 'status_notifier_item.dart';
 import 'status_notifier_watcher.dart';
 
 export 'action_group.dart' show DBusAction;
+export 'dbus_menu.dart' show DBusMenuItem;
 export 'enums.dart';
-export 'menu.dart' show DBusMenuItem;
 
 /// Event arguments for scroll events.
 class ScrollEvent {
@@ -103,7 +103,6 @@ class AppIndicator {
   final DBusClient _client;
   final _AppIndicatorObject _object;
   StatusNotifierWatcher? _watcher;
-  int? _menuGroupId;
   String? _registeredItemId;
 
   // Stream controllers
@@ -134,11 +133,9 @@ class AppIndicator {
     _serviceName = _buildServiceName(id);
     _object.id = id;
     _object.category = category.name;
-    _object.menu = _object.path; // Menu is on the same object path
-    _object.iconThemePath = '';
-    _object.title = '';
     _object.status = AppIndicatorStatus.active.name;
     _object.attentionIconName = '';
+    _object.menu = _object.path; // Canonical DBusMenu on same path
 
     this.iconName = iconName;
 
@@ -398,31 +395,8 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newToolTip);
   }
 
-  void setMenu(List<DBusMenuItem> items) {
-    if (_menuGroupId == null) {
-      _menuGroupId = _object.menuImpl.addMenu(items);
-      return;
-    }
-    _object.menuImpl.setMenu(_menuGroupId!, items);
-  }
-
-  int addSubMenu(List<DBusMenuItem> items) {
-    return _object.menuImpl.addMenu(items);
-  }
-
-  void setMenuGroup(int groupId, List<DBusMenuItem> items) {
-    _object.menuImpl.setMenu(groupId, items);
-    if (groupId == 0) {
-      _menuGroupId = groupId;
-    }
-  }
-
-  void updateMenuItems(int groupId,
-      {required int position,
-      int removeCount = 0,
-      List<DBusMenuItem> items = const <DBusMenuItem>[]}) {
-    _object.menuImpl.updateMenuItems(groupId,
-        position: position, removeCount: removeCount, items: items);
+  void setMenu(List<dm.DBusMenuItem> items) {
+    _object.menuImpl.updateItems(items);
   }
 
   void setActions(List<DBusAction> actions) {
@@ -653,7 +627,7 @@ class _WatcherEndpoint {
 }
 
 class _AppIndicatorObject extends StatusNotifierItem {
-  final DBusMenu menuImpl;
+  final dm.DBusMenu menuImpl;
   final DBusActionGroup actionGroupImpl;
 
   // Tooltip
@@ -684,7 +658,7 @@ class _AppIndicatorObject extends StatusNotifierItem {
   Function(int, int, int)? onXAyatanaActivate;
 
   _AppIndicatorObject(DBusObjectPath path)
-      : menuImpl = DBusMenu(path),
+      : menuImpl = dm.DBusMenu(path, []),
         actionGroupImpl = DBusActionGroup(path),
         super(path: path);
 
@@ -772,7 +746,7 @@ class _AppIndicatorObject extends StatusNotifierItem {
     if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
         methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
       return super.handleMethodCall(methodCall);
-    } else if (methodCall.interface == 'org.gtk.Menus') {
+    } else if (methodCall.interface == 'com.canonical.dbusmenu') {
       return menuImpl.handleMethodCall(methodCall);
     } else if (methodCall.interface == 'org.gtk.Actions') {
       return actionGroupImpl.handleMethodCall(methodCall);
