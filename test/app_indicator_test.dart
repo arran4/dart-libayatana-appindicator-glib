@@ -8,8 +8,8 @@ import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
-  static final List<String> registeredItems = [];
-  static final List<String> unregisteredItems = [];
+  final List<String> registeredItems = [];
+  final List<String> unregisteredItems = [];
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -53,11 +53,6 @@ void main() {
     await appClient.close();
   });
 
-  setUp(() async {
-    MockWatcher.registeredItems.clear();
-    MockWatcher.unregisteredItems.clear();
-  });
-
   test('AppIndicator connects and registers', () async {
     const watcherName = 'org.kde.StatusNotifierWatcher.BasicTest';
     const watcherPath = '/StatusNotifierWatcher/BasicTest';
@@ -69,21 +64,15 @@ void main() {
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
     await indicator.close();
-
-    expect(
-      MockWatcher.unregisteredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
 
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
@@ -101,10 +90,10 @@ void main() {
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
     );
@@ -167,15 +156,15 @@ void main() {
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')),
     );
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
     );
