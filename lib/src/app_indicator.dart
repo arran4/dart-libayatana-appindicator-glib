@@ -84,8 +84,8 @@ class AppIndicatorRegistrationException implements Exception {
   AppIndicatorRegistrationException(this.cause, this.stackTrace);
 
   @override
-  String toString() =>
-      'AppIndicatorRegistrationException: Failed to register with watcher: $cause';
+  String toString() => 'AppIndicatorRegistrationException: '
+      'Failed to register with watcher: $cause';
 }
 
 /// A port of Ayatana AppIndicator to Dart.
@@ -251,7 +251,7 @@ class AppIndicator {
     }
 
     if (lastError != null) {
-      throw AppIndicatorRegistrationException(lastError!, StackTrace.current);
+      throw AppIndicatorRegistrationException(lastError, StackTrace.current);
     }
   }
 

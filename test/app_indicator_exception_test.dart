@@ -9,7 +9,8 @@ void main() {
 
     expect(
       exception.toString(),
-      'AppIndicatorRegistrationException: Failed to register with watcher: Exception: Test cause',
+      'AppIndicatorRegistrationException: '
+      'Failed to register with watcher: Exception: Test cause',
     );
   });
 }
