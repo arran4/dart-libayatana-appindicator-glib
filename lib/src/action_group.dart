@@ -43,6 +43,14 @@ class DBusActionGroup extends DBusObject {
                 DBusSignature('a{sv}'), DBusArgumentDirection.in_,
                 name: 'platform_data'),
           ]),
+          DBusIntrospectMethod('SetState', args: [
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'action_name'),
+            DBusIntrospectArgument(
+                DBusSignature('v'), DBusArgumentDirection.in_,
+                name: 'value'),
+          ]),
         ],
       )
     ];
@@ -54,7 +62,9 @@ class DBusActionGroup extends DBusObject {
       return DBusMethodErrorResponse.unknownInterface();
     }
 
-    if (methodCall.name == 'Describe') {
+    if (methodCall.name == 'SetState') {
+      return _handleSetState(methodCall.values);
+    } else if (methodCall.name == 'Describe') {
       final name = methodCall.values[0].asString();
       final action = _actions[name];
       if (action == null) {
@@ -74,6 +84,29 @@ class DBusActionGroup extends DBusObject {
 
     return DBusMethodErrorResponse.unknownMethod();
   }
+
+  Future<DBusMethodResponse> _handleSetState(List<DBusValue> parameters) async {
+    if (parameters.length != 2) {
+      return DBusMethodErrorResponse.invalidArgs();
+    }
+    if (parameters[0] is! DBusString) {
+      return DBusMethodErrorResponse.invalidArgs();
+    }
+    var name = parameters[0].asString();
+    var value = parameters[1]; // variant
+
+    var action = _actions[name];
+    if (action == null) return DBusMethodErrorResponse.unknownMethod();
+    if (action.state == null) return DBusMethodErrorResponse.invalidArgs();
+
+    if (value is DBusVariant) {
+      action.changeState(value.value);
+    } else {
+      return DBusMethodErrorResponse.invalidArgs();
+    }
+
+    return DBusMethodSuccessResponse([]);
+  }
 }
 
 class DBusAction {
@@ -86,6 +119,8 @@ class DBusAction {
       {bool enabled = true, DBusValue? state, this.onActivate})
       : _enabled = enabled,
         _state = state;
+
+  DBusValue? get state => _state;
 
   void setEnabled(bool value) {
     _enabled = value;
