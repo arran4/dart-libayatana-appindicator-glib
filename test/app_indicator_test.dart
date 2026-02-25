@@ -235,6 +235,30 @@ void main() {
       ..attentionMovieName = 'attention-movie';
 
     await indicator.connect();
+
+    expect(indicator.itemIsMenu, isTrue);
+    expect(indicator.windowId, 77);
+
+    expect(indicator.iconPixmaps, hasLength(1));
+    expect(indicator.iconPixmaps.first.width, 1);
+    expect(indicator.iconPixmaps.first.height, 1);
+    expect(indicator.iconPixmaps.first.argb32Bytes, [0xff, 0x00, 0x00, 0xff]);
+
+    expect(indicator.attentionIconPixmaps, hasLength(1));
+    expect(indicator.attentionIconPixmaps.first.width, 1);
+    expect(indicator.attentionIconPixmaps.first.height, 1);
+    expect(indicator.attentionIconPixmaps.first.argb32Bytes,
+        [0xff, 0xff, 0x00, 0x00]);
+
+    expect(indicator.overlayIconName, 'overlay-name');
+    expect(indicator.overlayIconPixmaps, hasLength(1));
+    expect(indicator.overlayIconPixmaps.first.width, 1);
+    expect(indicator.overlayIconPixmaps.first.height, 1);
+    expect(indicator.overlayIconPixmaps.first.argb32Bytes,
+        [0xff, 0x00, 0xff, 0x00]);
+
+    expect(indicator.attentionMovieName, 'attention-movie');
+
     await indicator.close();
   });
 }
