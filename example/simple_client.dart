@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:ayatana_appindicator/ayatana_appindicator.dart';
+import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
 
 Future<void> main() async {
   void log(String message) => stdout.writeln('[showcase] $message');

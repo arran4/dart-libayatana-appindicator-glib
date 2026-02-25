@@ -1,7 +1,7 @@
 @TestOn('linux')
 import 'dart:io';
 
-import 'package:ayatana_appindicator/ayatana_appindicator.dart';
+import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
 import 'package:test/test.dart';
 
 void main() {

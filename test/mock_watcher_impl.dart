@@ -1,4 +1,4 @@
-import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
+import 'package:dart_libayatana_appindicator/src/status_notifier_watcher_server.dart';
 import 'dart:io';
 import 'package:dbus/dbus.dart';
 

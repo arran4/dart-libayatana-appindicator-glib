@@ -1,4 +1,4 @@
-import 'package:ayatana_appindicator/src/action_group.dart';
+import 'package:dart_libayatana_appindicator/src/action_group.dart';
 import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 

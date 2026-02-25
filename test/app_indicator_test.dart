@@ -2,8 +2,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:ayatana_appindicator/ayatana_appindicator.dart';
-import 'package:ayatana_appindicator/src/status_notifier_watcher_server.dart';
+import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
+import 'package:dart_libayatana_appindicator/src/status_notifier_watcher_server.dart';
 import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 

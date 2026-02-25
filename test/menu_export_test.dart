@@ -1,5 +1,5 @@
 @TestOn('linux')
-import 'package:ayatana_appindicator/src/dbus_menu.dart';
+import 'package:dart_libayatana_appindicator/src/dbus_menu.dart';
 import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
