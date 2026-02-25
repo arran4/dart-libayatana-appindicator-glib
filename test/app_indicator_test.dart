@@ -24,7 +24,6 @@ class MockWatcher extends StatusNotifierWatcher {
     }
     return super.handleMethodCall(methodCall);
   }
-
 }
 
 void main() {
