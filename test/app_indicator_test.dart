@@ -97,7 +97,8 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
-    final indicator = AppIndicator(id: 'freedesktop-indicator', client: appClient);
+    final indicator =
+        AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
     await Future.delayed(const Duration(milliseconds: 200));
@@ -116,16 +117,19 @@ void main() {
   test('AppIndicator connect does not throw when watcher is unavailable',
       () async {
     final indicator = AppIndicator(id: 'missing-watcher', client: appClient);
-    await indicator.connect(watcherName: 'org.kde.StatusNotifierWatcher.NonExistent');
+    await indicator.connect(
+        watcherName: 'org.kde.StatusNotifierWatcher.NonExistent');
     await indicator.close();
   });
 
   test('AppIndicator reports watcher and host availability', () async {
     const watcherName = 'org.kde.StatusNotifierWatcher.DiagTest';
     const watcherPath = '/StatusNotifierWatcher/DiagTest';
-    
-    final indicatorWithoutWatcher = AppIndicator(id: 'diag-missing-watcher', client: appClient);
-    await indicatorWithoutWatcher.connect(watcherName: 'org.kde.StatusNotifierWatcher.None');
+
+    final indicatorWithoutWatcher =
+        AppIndicator(id: 'diag-missing-watcher', client: appClient);
+    await indicatorWithoutWatcher.connect(
+        watcherName: 'org.kde.StatusNotifierWatcher.None');
     expect(indicatorWithoutWatcher.isWatcherAvailable, isFalse);
     expect(await indicatorWithoutWatcher.isStatusNotifierHostRegistered(),
         isFalse);
@@ -135,10 +139,12 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
-    final indicatorWithWatcher = AppIndicator(id: 'diag-with-watcher', client: appClient);
-    await indicatorWithWatcher.connect(watcherName: watcherName, watcherPath: watcherPath);
+    final indicatorWithWatcher =
+        AppIndicator(id: 'diag-with-watcher', client: appClient);
+    await indicatorWithWatcher.connect(
+        watcherName: watcherName, watcherPath: watcherPath);
     expect(indicatorWithWatcher.isWatcherAvailable, isTrue);
-    
+
     await indicatorWithWatcher.close();
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
@@ -154,10 +160,12 @@ void main() {
     await systemClient.requestName(watcherName);
 
     final emptyAfterSanitize = AppIndicator(id: '!!!', client: appClient);
-    await emptyAfterSanitize.connect(watcherName: watcherName, watcherPath: watcherPath);
+    await emptyAfterSanitize.connect(
+        watcherName: watcherName, watcherPath: watcherPath);
 
     final leadingDigit = AppIndicator(id: '123-start', client: appClient);
-    await leadingDigit.connect(watcherName: watcherName, watcherPath: watcherPath);
+    await leadingDigit.connect(
+        watcherName: watcherName, watcherPath: watcherPath);
 
     await Future.delayed(const Duration(milliseconds: 200));
 

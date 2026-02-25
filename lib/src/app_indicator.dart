@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
+
 import 'package:crypto/crypto.dart';
 import 'package:dbus/dbus.dart';
 
@@ -88,7 +89,6 @@ class AppIndicator {
   final DBusClient _client;
   final bool _ownsClient;
   final _AppIndicatorObject _object;
-  StatusNotifierWatcher? _watcher;
   String? _registeredItemId;
 
   String _rawIconName = '';
@@ -115,10 +115,10 @@ class AppIndicator {
     String iconName = '',
     this.category = AppIndicatorCategory.applicationStatus,
     DBusClient? client,
-  }) : _client = client ?? DBusClient.session(),
-       _ownsClient = client == null,
-       _object = _AppIndicatorObject(_buildObjectPath(id)),
-       _serviceName = _buildServiceName(id) {
+  })  : _client = client ?? DBusClient.session(),
+        _ownsClient = client == null,
+        _object = _AppIndicatorObject(_buildObjectPath(id)),
+        _serviceName = _buildServiceName(id) {
     _object.id = id;
     _object.category = category.name;
     _object.status = AppIndicatorStatus.passive.name;
@@ -178,13 +178,14 @@ class AppIndicator {
 
   static String _buildServiceName(String id) {
     final rand = Random().nextInt(1000000);
-    return 'org.ayatana.appindicator.${_sanitizeId(id)}.p${pid}.v$rand';
+    return 'org.ayatana.appindicator.${_sanitizeId(id)}.p$pid.v$rand';
   }
 
   Future<void> connect({String? watcherName, String? watcherPath}) async {
     if (_isConnected) return;
 
-    stderr.writeln('[debug] AppIndicator.connect: client=${_client.hashCode} service=$_serviceName');
+    stderr.writeln('[debug] AppIndicator.connect: '
+        'client=${_client.hashCode} service=$_serviceName');
     await _client.requestName(_serviceName);
     _isConnected = true;
     await _flushPendingSignals();
@@ -195,17 +196,20 @@ class AppIndicator {
     // Probe for StatusNotifierWatcher
     final watchers = <StatusNotifierWatcher>[];
     if (watcherName != null && watcherPath != null) {
-      watchers.add(StatusNotifierWatcher(_client, watcherName, path: DBusObjectPath(watcherPath)));
+      watchers.add(StatusNotifierWatcher(_client, watcherName,
+          path: DBusObjectPath(watcherPath)));
     } else {
-      watchers.add(StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher'));
-      watchers.add(StatusNotifierWatcher(_client, 'org.freedesktop.StatusNotifierWatcher',
-          path: const DBusObjectPath.unchecked('/org/freedesktop/StatusNotifierWatcher')));
+      watchers
+          .add(StatusNotifierWatcher(_client, 'org.kde.StatusNotifierWatcher'));
+      watchers.add(StatusNotifierWatcher(
+          _client, 'org.freedesktop.StatusNotifierWatcher',
+          path: const DBusObjectPath.unchecked(
+              '/org/freedesktop/StatusNotifierWatcher')));
     }
 
     for (final watcher in watchers) {
       try {
         await _registerWithWatcher(watcher);
-        _watcher = watcher;
         return;
       } catch (_) {
         // Fallback to next watcher
@@ -214,7 +218,10 @@ class AppIndicator {
   }
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
-    final pathStr = _object.path.toString().replaceAll('DBusObjectPath(\'', '').replaceAll('\')', '');
+    final pathStr = _object.path
+        .toString()
+        .replaceAll('DBusObjectPath(\'', '')
+        .replaceAll('\')', '');
     final registrationTargets = <String>[
       _serviceName,
       pathStr,
@@ -239,8 +246,9 @@ class AppIndicator {
 
   Future<void> close() async {
     if (!_isConnected) return;
-    
-    // Unregister object and release name instead of closing client if we don't own it
+
+    // Unregister object and release name instead of closing client if we don't
+    // own it
     _client.unregisterObject(_object);
     try {
       await _client.releaseName(_serviceName);
@@ -293,7 +301,9 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newAttentionIcon);
   }
 
-  String get iconThemePath => _manualIconThemePath.isNotEmpty ? _manualIconThemePath : _object.iconThemePath;
+  String get iconThemePath => _manualIconThemePath.isNotEmpty
+      ? _manualIconThemePath
+      : _object.iconThemePath;
   set iconThemePath(String value) {
     _manualIconThemePath = value;
     _object.iconThemePath = value;
@@ -302,7 +312,9 @@ class AppIndicator {
 
   void _updatePaths() {
     final currentIcon = (status == AppIndicatorStatus.attention)
-        ? (_rawAttentionIconName.isNotEmpty ? _rawAttentionIconName : _rawIconName)
+        ? (_rawAttentionIconName.isNotEmpty
+            ? _rawAttentionIconName
+            : _rawIconName)
         : _rawIconName;
 
     if (currentIcon.startsWith('/')) {
@@ -351,26 +363,27 @@ class AppIndicator {
   }
 
   List<IconPixmap> get iconPixmaps => _object.iconPixmap.map((v) {
-    final s = v as DBusStruct;
-    return IconPixmap(
-      width: s.children[0].asInt32(),
-      height: s.children[1].asInt32(),
-      argb32Bytes: s.children[2].asByteArray().toList(),
-    );
-  }).toList();
+        final s = v as DBusStruct;
+        return IconPixmap(
+          width: s.children[0].asInt32(),
+          height: s.children[1].asInt32(),
+          argb32Bytes: s.children[2].asByteArray().toList(),
+        );
+      }).toList();
   set iconPixmaps(List<IconPixmap> value) {
     _object.iconPixmap = value.map((v) => v.toDBus()).toList();
     _queueSignal(_PendingSignal.newIcon);
   }
 
-  List<IconPixmap> get attentionIconPixmaps => _object.attentionIconPixmap.map((v) {
-    final s = v as DBusStruct;
-    return IconPixmap(
-      width: s.children[0].asInt32(),
-      height: s.children[1].asInt32(),
-      argb32Bytes: s.children[2].asByteArray().toList(),
-    );
-  }).toList();
+  List<IconPixmap> get attentionIconPixmaps =>
+      _object.attentionIconPixmap.map((v) {
+        final s = v as DBusStruct;
+        return IconPixmap(
+          width: s.children[0].asInt32(),
+          height: s.children[1].asInt32(),
+          argb32Bytes: s.children[2].asByteArray().toList(),
+        );
+      }).toList();
   set attentionIconPixmaps(List<IconPixmap> value) {
     _object.attentionIconPixmap = value.map((v) => v.toDBus()).toList();
     _queueSignal(_PendingSignal.newAttentionIcon);
@@ -383,13 +396,13 @@ class AppIndicator {
   }
 
   List<IconPixmap> get overlayIconPixmaps => _object.overlayIconPixmap.map((v) {
-    final s = v as DBusStruct;
-    return IconPixmap(
-      width: s.children[0].asInt32(),
-      height: s.children[1].asInt32(),
-      argb32Bytes: s.children[2].asByteArray().toList(),
-    );
-  }).toList();
+        final s = v as DBusStruct;
+        return IconPixmap(
+          width: s.children[0].asInt32(),
+          height: s.children[1].asInt32(),
+          argb32Bytes: s.children[2].asByteArray().toList(),
+        );
+      }).toList();
   set overlayIconPixmaps(List<IconPixmap> value) {
     _object.overlayIconPixmap = value.map((v) => v.toDBus()).toList();
     _queueSignal(_PendingSignal.newOverlayIcon);
@@ -428,7 +441,8 @@ class AppIndicator {
     await _object.doContextMenu(x, y);
   }
 
-  Future<void> dispatchScroll({int delta = 0, String orientation = 'vertical'}) async {
+  Future<void> dispatchScroll(
+      {int delta = 0, String orientation = 'vertical'}) async {
     await _object.doScroll(delta, orientation);
   }
 
@@ -479,7 +493,8 @@ class AppIndicator {
       case _PendingSignal.newTitle:
         await _object.emitNewTitle();
       case _PendingSignal.newLabel:
-        await _object.emitXAyatanaNewLabel(_object.xAyatanaLabel, _object.xAyatanaLabelGuide);
+        await _object.emitXAyatanaNewLabel(
+            _object.xAyatanaLabel, _object.xAyatanaLabelGuide);
       case _PendingSignal.newIconThemePath:
         await _object.emitNewIconThemePath(_object.iconThemePath);
       case _PendingSignal.newToolTip:
@@ -591,16 +606,20 @@ class _AppIndicatorObject extends StatusNotifierItem {
 
   Future<void> emitNewOverlayIcon() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewOverlayIcon', []);
+    await emitSignal(
+        'org.freedesktop.StatusNotifierItem', 'NewOverlayIcon', []);
   }
 
+  @override
   Future<void> emitNewAttentionIcon() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal(
+        'org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
   }
 
   Future<void> emitNewAttentionMovie() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewAttentionMovie', []);
+    await emitSignal(
+        'org.freedesktop.StatusNotifierItem', 'NewAttentionMovie', []);
   }
 }

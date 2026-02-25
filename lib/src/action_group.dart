@@ -20,16 +20,28 @@ class DBusActionGroup extends DBusObject {
         'org.gtk.Actions',
         methods: [
           DBusIntrospectMethod('Describe', args: [
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'action_name'),
-            DBusIntrospectArgument(DBusSignature('(bgav)'), DBusArgumentDirection.out, name: 'description'),
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'action_name'),
+            DBusIntrospectArgument(
+                DBusSignature('(bgav)'), DBusArgumentDirection.out,
+                name: 'description'),
           ]),
           DBusIntrospectMethod('DescribeAll', args: [
-            DBusIntrospectArgument(DBusSignature('a{s(bgav)}'), DBusArgumentDirection.out, name: 'descriptions'),
+            DBusIntrospectArgument(
+                DBusSignature('a{s(bgav)}'), DBusArgumentDirection.out,
+                name: 'descriptions'),
           ]),
           DBusIntrospectMethod('Activate', args: [
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'action_name'),
-            DBusIntrospectArgument(DBusSignature('av'), DBusArgumentDirection.in_, name: 'parameter'),
-            DBusIntrospectArgument(DBusSignature('a{sv}'), DBusArgumentDirection.in_, name: 'platform_data'),
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'action_name'),
+            DBusIntrospectArgument(
+                DBusSignature('av'), DBusArgumentDirection.in_,
+                name: 'parameter'),
+            DBusIntrospectArgument(
+                DBusSignature('a{sv}'), DBusArgumentDirection.in_,
+                name: 'platform_data'),
           ]),
         ],
       )
@@ -46,7 +58,8 @@ class DBusActionGroup extends DBusObject {
       final name = methodCall.values[0].asString();
       final action = _actions[name];
       if (action == null) {
-        return DBusMethodErrorResponse.unknownMethod(); // Or a more specific error
+        return DBusMethodErrorResponse
+            .unknownMethod(); // Or a more specific error
       }
       return DBusMethodSuccessResponse([action.toDescription()]);
     } else if (methodCall.name == 'Activate') {
@@ -69,7 +82,8 @@ class DBusAction {
   DBusValue? _state;
   final void Function(List<DBusValue>)? onActivate;
 
-  DBusAction(this.name, {bool enabled = true, DBusValue? state, this.onActivate})
+  DBusAction(this.name,
+      {bool enabled = true, DBusValue? state, this.onActivate})
       : _enabled = enabled,
         _state = state;
 

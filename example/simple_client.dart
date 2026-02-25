@@ -37,8 +37,10 @@ Future<void> main() async {
 
   // Set up the menu
   indicator.setMenu([
-    DBusMenuItem.label('Item 1', onActivated: () => log('Menu item 1 clicked.')),
-    DBusMenuItem.label('Item 2', onActivated: () => log('Menu item 2 clicked.')),
+    DBusMenuItem.label('Item 1',
+        onActivated: () => log('Menu item 1 clicked.')),
+    DBusMenuItem.label('Item 2',
+        onActivated: () => log('Menu item 2 clicked.')),
     DBusMenuItem.label('Toggle Attention', onActivated: () {
       attentionActive = !attentionActive;
       indicator.status = attentionActive
@@ -60,7 +62,8 @@ Future<void> main() async {
 
   // Set up event callbacks (Simplified API)
   indicator.onActivate = (x, y) => log('Primary activation @($x, $y)');
-  indicator.onSecondaryActivate = (x, y) => log('Secondary activation @($x, $y)');
+  indicator.onSecondaryActivate =
+      (x, y) => log('Secondary activation @($x, $y)');
   indicator.onContextMenu = (x, y) => log('Context menu @($x, $y)');
   indicator.onScroll = (delta, orientation) {
     log('Scroll event: delta=$delta, orientation=$orientation');

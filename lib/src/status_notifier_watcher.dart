@@ -16,7 +16,8 @@ class StatusNotifierWatcherStatusNotifierItemRegistered extends DBusSignal {
             values: signal.values);
 }
 
-/// Signal data for org.kde.StatusNotifierWatcher.StatusNotifierItemUnregistered.
+/// Signal data for
+/// org.kde.StatusNotifierWatcher.StatusNotifierItemUnregistered.
 class StatusNotifierWatcherStatusNotifierItemUnregistered extends DBusSignal {
   String get service => values[0].asString();
 
@@ -41,15 +42,18 @@ class StatusNotifierWatcherStatusNotifierHostRegistered extends DBusSignal {
 }
 
 class StatusNotifierWatcher extends DBusRemoteObject {
-  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierItemRegistered signals.
+  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierItemRegistered
+  /// signals.
   late final Stream<StatusNotifierWatcherStatusNotifierItemRegistered>
       statusNotifierItemRegistered;
 
-  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierItemUnregistered signals.
+  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierItemUnregistered
+  /// signals.
   late final Stream<StatusNotifierWatcherStatusNotifierItemUnregistered>
       statusNotifierItemUnregistered;
 
-  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierHostRegistered signals.
+  /// Stream of org.kde.StatusNotifierWatcher.StatusNotifierHostRegistered
+  /// signals.
   late final Stream<StatusNotifierWatcherStatusNotifierHostRegistered>
       statusNotifierHostRegistered;
 

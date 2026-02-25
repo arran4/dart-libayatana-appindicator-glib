@@ -9,12 +9,11 @@ void main() {
 
     menu.updateItems([
       DBusMenuItem(id: 1, properties: {'label': DBusString('Item 1')}),
-      DBusMenuItem(
-          id: 2,
-          properties: {'label': DBusString('Item 2')},
-          children: [
-            DBusMenuItem(id: 3, properties: {'label': DBusString('Sub Item 1')}),
-          ]),
+      DBusMenuItem(id: 2, properties: {
+        'label': DBusString('Item 2')
+      }, children: [
+        DBusMenuItem(id: 3, properties: {'label': DBusString('Sub Item 1')}),
+      ]),
     ]);
 
     expect(menu.items.length, 2);

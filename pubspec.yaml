@@ -1,6 +1,6 @@
 name: dart_libayatana_appindicator
-description: A complete port of Ayatana Application Indicator to Dart.
-version: 0.1.4
+description: A port of Ayatana Application Indicator to Dart.
+version: 0.1.5
 repository: https://github.com/arran4/dart-libayatana-appindicator-glib
 homepage: https://github.com/arran4/dart-libayatana-appindicator-glib
 

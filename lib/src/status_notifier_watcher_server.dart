@@ -19,19 +19,22 @@ class StatusNotifierWatcher extends DBusObject {
     return DBusMethodSuccessResponse([DBusInt32(protocolVersion)]);
   }
 
-  /// Gets value of property org.kde.StatusNotifierWatcher.IsStatusNotifierHostRegistered
+  /// Gets value of property
+  /// org.kde.StatusNotifierWatcher.IsStatusNotifierHostRegistered
   Future<DBusMethodResponse> getIsStatusNotifierHostRegistered() async {
     return DBusMethodSuccessResponse(
         [DBusBoolean(isStatusNotifierHostRegistered)]);
   }
 
-  /// Gets value of property org.kde.StatusNotifierWatcher.RegisteredStatusNotifierItems
+  /// Gets value of property
+  /// org.kde.StatusNotifierWatcher.RegisteredStatusNotifierItems
   Future<DBusMethodResponse> getRegisteredStatusNotifierItems() async {
     return DBusMethodSuccessResponse(
         [DBusArray.string(registeredStatusNotifierItems)]);
   }
 
-  /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierItem()
+  /// Implementation of
+  /// org.kde.StatusNotifierWatcher.RegisterStatusNotifierItem()
   Future<DBusMethodResponse> doRegisterStatusNotifierItem(
       String service) async {
     if (!registeredStatusNotifierItems.contains(service)) {
@@ -41,7 +44,8 @@ class StatusNotifierWatcher extends DBusObject {
     return DBusMethodSuccessResponse([]);
   }
 
-  /// Implementation of org.kde.StatusNotifierWatcher.RegisterStatusNotifierHost()
+  /// Implementation of
+  /// org.kde.StatusNotifierWatcher.RegisterStatusNotifierHost()
   Future<DBusMethodResponse> doRegisterStatusNotifierHost(
       String service) async {
     if (!isStatusNotifierHostRegistered) {

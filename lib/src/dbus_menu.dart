@@ -15,42 +15,82 @@ class DBusMenu extends DBusObject {
         'com.canonical.dbusmenu',
         methods: [
           DBusIntrospectMethod('GetLayout', args: [
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'parentId'),
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'recursionDepth'),
-            DBusIntrospectArgument(DBusSignature('as'), DBusArgumentDirection.in_, name: 'propertyNames'),
-            DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.out, name: 'revision'),
-            DBusIntrospectArgument(DBusSignature('(ia{sv}av)'), DBusArgumentDirection.out, name: 'layout'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'parentId'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'recursionDepth'),
+            DBusIntrospectArgument(
+                DBusSignature('as'), DBusArgumentDirection.in_,
+                name: 'propertyNames'),
+            DBusIntrospectArgument(
+                DBusSignature('u'), DBusArgumentDirection.out,
+                name: 'revision'),
+            DBusIntrospectArgument(
+                DBusSignature('(ia{sv}av)'), DBusArgumentDirection.out,
+                name: 'layout'),
           ]),
           DBusIntrospectMethod('GetGroupProperties', args: [
-            DBusIntrospectArgument(DBusSignature('ai'), DBusArgumentDirection.in_, name: 'ids'),
-            DBusIntrospectArgument(DBusSignature('as'), DBusArgumentDirection.in_, name: 'propertyNames'),
-            DBusIntrospectArgument(DBusSignature('a(ia{sv})'), DBusArgumentDirection.out, name: 'properties'),
+            DBusIntrospectArgument(
+                DBusSignature('ai'), DBusArgumentDirection.in_,
+                name: 'ids'),
+            DBusIntrospectArgument(
+                DBusSignature('as'), DBusArgumentDirection.in_,
+                name: 'propertyNames'),
+            DBusIntrospectArgument(
+                DBusSignature('a(ia{sv})'), DBusArgumentDirection.out,
+                name: 'properties'),
           ]),
           DBusIntrospectMethod('GetProperty', args: [
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'id'),
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'name'),
-            DBusIntrospectArgument(DBusSignature('v'), DBusArgumentDirection.out, name: 'value'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'id'),
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'name'),
+            DBusIntrospectArgument(
+                DBusSignature('v'), DBusArgumentDirection.out,
+                name: 'value'),
           ]),
           DBusIntrospectMethod('Event', args: [
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'id'),
-            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_, name: 'eventId'),
-            DBusIntrospectArgument(DBusSignature('v'), DBusArgumentDirection.in_, name: 'data'),
-            DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_, name: 'timestamp'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'id'),
+            DBusIntrospectArgument(
+                DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'eventId'),
+            DBusIntrospectArgument(
+                DBusSignature('v'), DBusArgumentDirection.in_,
+                name: 'data'),
+            DBusIntrospectArgument(
+                DBusSignature('u'), DBusArgumentDirection.in_,
+                name: 'timestamp'),
           ]),
           DBusIntrospectMethod('AboutToShow', args: [
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'id'),
-            DBusIntrospectArgument(DBusSignature('b'), DBusArgumentDirection.out, name: 'needUpdate'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'id'),
+            DBusIntrospectArgument(
+                DBusSignature('b'), DBusArgumentDirection.out,
+                name: 'needUpdate'),
           ]),
         ],
         signals: [
           DBusIntrospectSignal('LayoutUpdated', args: [
-            DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.out, name: 'revision'),
-            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.out, name: 'parentId'),
+            DBusIntrospectArgument(
+                DBusSignature('u'), DBusArgumentDirection.out,
+                name: 'revision'),
+            DBusIntrospectArgument(
+                DBusSignature('i'), DBusArgumentDirection.out,
+                name: 'parentId'),
           ]),
         ],
         properties: [
-          DBusIntrospectProperty('Version', DBusSignature('u'), access: DBusPropertyAccess.read),
-          DBusIntrospectProperty('Status', DBusSignature('s'), access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Version', DBusSignature('u'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Status', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
         ],
       )
     ];
@@ -71,7 +111,8 @@ class DBusMenu extends DBusObject {
       final eventId = methodCall.values[1].asString();
       return _handleEvent(id, eventId);
     } else if (methodCall.name == 'GetGroupProperties') {
-      return DBusMethodSuccessResponse([DBusArray(DBusSignature('(ia{sv})'), [])]);
+      return DBusMethodSuccessResponse(
+          [DBusArray(DBusSignature('(ia{sv})'), [])]);
     } else if (methodCall.name == 'AboutToShow') {
       return DBusMethodSuccessResponse([DBusBoolean(false)]);
     }
@@ -82,13 +123,18 @@ class DBusMenu extends DBusObject {
   @override
   Future<DBusMethodResponse> getProperty(String interface, String name) async {
     if (interface == 'com.canonical.dbusmenu') {
-      if (name == 'Version') return DBusMethodSuccessResponse([DBusUint32(3)]);
-      if (name == 'Status') return DBusMethodSuccessResponse([DBusString('normal')]);
+      if (name == 'Version') {
+        return DBusMethodSuccessResponse([DBusUint32(3)]);
+      }
+      if (name == 'Status') {
+        return DBusMethodSuccessResponse([DBusString('normal')]);
+      }
     }
     return DBusMethodErrorResponse.unknownProperty();
   }
 
-  Future<DBusMethodResponse> _getLayout(int parentId, int recursionDepth) async {
+  Future<DBusMethodResponse> _getLayout(
+      int parentId, int recursionDepth) async {
     final layout = _buildLayout(0);
     return DBusMethodSuccessResponse([DBusUint32(_revision), layout]);
   }
@@ -104,7 +150,8 @@ class DBusMenu extends DBusObject {
     return DBusStruct([
       DBusInt32(id),
       DBusDict.stringVariant(properties),
-      DBusArray(DBusSignature('v'), children.map((c) => DBusVariant(c)).toList()),
+      DBusArray(
+          DBusSignature('v'), children.map((c) => DBusVariant(c)).toList()),
     ]);
   }
 
@@ -112,7 +159,8 @@ class DBusMenu extends DBusObject {
     return DBusStruct([
       DBusInt32(item.id),
       DBusDict.stringVariant(item.properties),
-      DBusArray(DBusSignature('v'), item.children.map((c) => DBusVariant(_buildItem(c))).toList()),
+      DBusArray(DBusSignature('v'),
+          item.children.map((c) => DBusVariant(_buildItem(c))).toList()),
     ]);
   }
 
@@ -137,7 +185,8 @@ class DBusMenu extends DBusObject {
     _rootItems.clear();
     _rootItems.addAll(items);
     _revision++;
-    emitSignal('com.canonical.dbusmenu', 'LayoutUpdated', [DBusUint32(_revision), DBusInt32(0)]);
+    emitSignal('com.canonical.dbusmenu', 'LayoutUpdated',
+        [DBusUint32(_revision), DBusInt32(0)]);
   }
 }
 
@@ -154,7 +203,8 @@ class DBusMenuItem {
     this.onActivated,
   });
 
-  factory DBusMenuItem.label(String label, {int id = 0, void Function()? onActivated}) {
+  factory DBusMenuItem.label(String label,
+      {int id = 0, void Function()? onActivated}) {
     return DBusMenuItem(
       id: id,
       properties: {'label': DBusString(label)},
