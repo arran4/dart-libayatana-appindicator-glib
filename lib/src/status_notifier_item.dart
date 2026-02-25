@@ -490,38 +490,52 @@ class StatusNotifierItem extends DBusObject {
     var properties = <String, DBusValue>{};
     if (interface == 'org.kde.StatusNotifierItem' ||
         interface == 'org.freedesktop.StatusNotifierItem') {
-      properties['Id'] = (await getId()).returnValues[0];
-      properties['Category'] = (await getCategory()).returnValues[0];
-      properties['Status'] = (await getStatus()).returnValues[0];
-      properties['IconName'] = (await getIconName()).returnValues[0];
-      properties['IconAccessibleDesc'] =
-          (await getIconAccessibleDesc()).returnValues[0];
-      properties['AttentionIconName'] =
-          (await getAttentionIconName()).returnValues[0];
-      properties['AttentionAccessibleDesc'] =
-          (await getAttentionAccessibleDesc()).returnValues[0];
-      properties['Title'] = (await getTitle()).returnValues[0];
-      properties['IconThemePath'] = (await getIconThemePath()).returnValues[0];
-      properties['Menu'] = (await getMenu()).returnValues[0];
-      properties['XAyatanaLabel'] = (await getXAyatanaLabel()).returnValues[0];
-      properties['XAyatanaLabelGuide'] =
-          (await getXAyatanaLabelGuide()).returnValues[0];
-      properties['XAyatanaOrderingIndex'] =
-          (await getXAyatanaOrderingIndex()).returnValues[0];
-      properties['ToolTip'] = (await getToolTip()).returnValues[0];
-      properties['WindowId'] = (await getWindowId()).returnValues[0];
-      properties['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
-      properties['IconPixmap'] = (await getIconPixmap()).returnValues[0];
-      properties['AttentionIconPixmap'] =
-          (await getAttentionIconPixmap()).returnValues[0];
-      properties['OverlayIconName'] =
-          (await getOverlayIconName()).returnValues[0];
-      properties['OverlayIconAccessibleDesc'] =
-          (await getOverlayIconAccessibleDesc()).returnValues[0];
-      properties['OverlayIconPixmap'] =
-          (await getOverlayIconPixmap()).returnValues[0];
-      properties['AttentionMovieName'] =
-          (await getAttentionMovieName()).returnValues[0];
+      var results = await Future.wait([
+        getId(),
+        getCategory(),
+        getStatus(),
+        getIconName(),
+        getIconAccessibleDesc(),
+        getAttentionIconName(),
+        getAttentionAccessibleDesc(),
+        getTitle(),
+        getIconThemePath(),
+        getMenu(),
+        getXAyatanaLabel(),
+        getXAyatanaLabelGuide(),
+        getXAyatanaOrderingIndex(),
+        getToolTip(),
+        getWindowId(),
+        getItemIsMenu(),
+        getIconPixmap(),
+        getAttentionIconPixmap(),
+        getOverlayIconName(),
+        getOverlayIconAccessibleDesc(),
+        getOverlayIconPixmap(),
+        getAttentionMovieName(),
+      ]);
+      properties['Id'] = results[0].returnValues[0];
+      properties['Category'] = results[1].returnValues[0];
+      properties['Status'] = results[2].returnValues[0];
+      properties['IconName'] = results[3].returnValues[0];
+      properties['IconAccessibleDesc'] = results[4].returnValues[0];
+      properties['AttentionIconName'] = results[5].returnValues[0];
+      properties['AttentionAccessibleDesc'] = results[6].returnValues[0];
+      properties['Title'] = results[7].returnValues[0];
+      properties['IconThemePath'] = results[8].returnValues[0];
+      properties['Menu'] = results[9].returnValues[0];
+      properties['XAyatanaLabel'] = results[10].returnValues[0];
+      properties['XAyatanaLabelGuide'] = results[11].returnValues[0];
+      properties['XAyatanaOrderingIndex'] = results[12].returnValues[0];
+      properties['ToolTip'] = results[13].returnValues[0];
+      properties['WindowId'] = results[14].returnValues[0];
+      properties['ItemIsMenu'] = results[15].returnValues[0];
+      properties['IconPixmap'] = results[16].returnValues[0];
+      properties['AttentionIconPixmap'] = results[17].returnValues[0];
+      properties['OverlayIconName'] = results[18].returnValues[0];
+      properties['OverlayIconAccessibleDesc'] = results[19].returnValues[0];
+      properties['OverlayIconPixmap'] = results[20].returnValues[0];
+      properties['AttentionMovieName'] = results[21].returnValues[0];
     }
     return DBusMethodSuccessResponse([DBusDict.stringVariant(properties)]);
   }
