@@ -222,14 +222,14 @@ void main() {
     indicator
       ..itemIsMenu = true
       ..windowId = 77
-      ..iconPixmaps = const [
+      ..iconPixmaps = [
         IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0x00, 0x00, 0xff]),
       ]
-      ..attentionIconPixmaps = const [
+      ..attentionIconPixmaps = [
         IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0xff, 0x00, 0x00]),
       ]
       ..overlayIconName = 'overlay-name'
-      ..overlayIconPixmaps = const [
+      ..overlayIconPixmaps = [
         IconPixmap(width: 1, height: 1, argb32Bytes: [0xff, 0x00, 0xff, 0x00]),
       ]
       ..attentionMovieName = 'attention-movie';

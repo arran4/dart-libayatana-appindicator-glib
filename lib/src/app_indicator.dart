@@ -62,11 +62,16 @@ class IconPixmap {
   final int height;
   final List<int> argb32Bytes;
 
-  const IconPixmap({
+  IconPixmap({
     required this.width,
     required this.height,
     required this.argb32Bytes,
-  });
+  }) {
+    if (argb32Bytes.length != width * height * 4) {
+      throw ArgumentError(
+          'IconPixmap: argb32Bytes length (${argb32Bytes.length}) must be width * height * 4 ($width * $height * 4 = ${width * height * 4})');
+    }
+  }
 
   DBusValue toDBus() {
     return DBusStruct([
