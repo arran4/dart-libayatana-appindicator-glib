@@ -130,7 +130,7 @@ class AppIndicator {
       AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
       : _client = DBusClient.session(),
         _object = _AppIndicatorObject(
-            const DBusObjectPath.unchecked('/StatusNotifierItem')) {
+            DBusObjectPath('/org/ayatana/NotificationItem/${_cleanId(id)}')) {
     _serviceName = _buildServiceName(id);
     _object.id = id;
     _object.category = category.name;
@@ -531,10 +531,11 @@ class AppIndicator {
   }
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
-    // Registering with the well-known bus name is the most standard and compatible way.
-    // The watcher will default to the standard /StatusNotifierItem path.
-    await watcher.callRegisterStatusNotifierItem(_serviceName);
-    _registeredItemId = _serviceName;
+    // Registering with the object path tells the watcher to use our bus name
+    // and the specific path we provided.
+    final target = _object.path.value;
+    await watcher.callRegisterStatusNotifierItem(target);
+    _registeredItemId = target;
   }
 
   bool _isWatcherUnavailable(Object error) {
