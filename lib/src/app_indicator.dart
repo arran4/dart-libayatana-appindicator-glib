@@ -120,8 +120,8 @@ class AppIndicator {
         _object = _AppIndicatorObject(_buildObjectPath(id)),
         _serviceName = _buildServiceName(id) {
     _object.id = id;
-    _object.category = category.name;
-    _object.status = AppIndicatorStatus.passive.name;
+    _object.category = category.dbusValue;
+    _object.status = AppIndicatorStatus.passive.dbusValue;
     _object.attentionIconName = '';
     _object.menu = _object.path; // Canonical DBusMenu on same path
     _object.itemIsMenu = true;
@@ -280,9 +280,9 @@ class AppIndicator {
   }
 
   AppIndicatorStatus get status =>
-      AppIndicatorStatus.values.firstWhere((e) => e.name == _object.status);
+      AppIndicatorStatus.values.firstWhere((e) => e.dbusValue == _object.status);
   set status(AppIndicatorStatus value) {
-    _object.status = value.name;
+    _object.status = value.dbusValue;
     _updatePaths();
     _queueSignal(_PendingSignal.newStatus);
   }

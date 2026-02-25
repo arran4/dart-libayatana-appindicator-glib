@@ -15,7 +15,8 @@ enum AppIndicatorStatus {
 }
 
 extension AppIndicatorCategoryExtension on AppIndicatorCategory {
-  String get name {
+  /// The D-Bus value for the category.
+  String get dbusValue {
     switch (this) {
       case AppIndicatorCategory.applicationStatus:
         return 'ApplicationStatus';
@@ -32,7 +33,8 @@ extension AppIndicatorCategoryExtension on AppIndicatorCategory {
 }
 
 extension AppIndicatorStatusExtension on AppIndicatorStatus {
-  String get name {
+  /// The D-Bus value for the status.
+  String get dbusValue {
     switch (this) {
       case AppIndicatorStatus.passive:
         return 'Passive';
