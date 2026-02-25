@@ -604,22 +604,22 @@ class _AppIndicatorObject extends StatusNotifierItem {
     ]);
   }
 
+  Future<void> _emitSignalToBoth(String name,
+      [List<DBusValue> values = const []]) async {
+    await emitSignal('org.kde.StatusNotifierItem', name, values);
+    await emitSignal('org.freedesktop.StatusNotifierItem', name, values);
+  }
+
   Future<void> emitNewOverlayIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
-    await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewOverlayIcon', []);
+    await _emitSignalToBoth('NewOverlayIcon');
   }
 
   @override
   Future<void> emitNewAttentionIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
-    await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
+    await _emitSignalToBoth('NewAttentionIcon');
   }
 
   Future<void> emitNewAttentionMovie() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
-    await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionMovie', []);
+    await _emitSignalToBoth('NewAttentionMovie');
   }
 }
