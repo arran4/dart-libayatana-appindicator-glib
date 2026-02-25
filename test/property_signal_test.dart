@@ -18,17 +18,20 @@ void main() {
     listenerClient = DBusClient.session();
 
     MockWatcher.registeredItems.clear();
-    watcher = MockWatcher(path: '/StatusNotifierWatcher');
+    watcher = MockWatcher(path: '/StatusNotifierWatcher/PropertyTest');
     await client.registerObject(watcher);
-    await client.requestName('org.kde.StatusNotifierWatcher');
+    await client.requestName('org.kde.StatusNotifierWatcher.PropertyTest');
 
     indicator = AppIndicator(id: 'test', client: client);
-    await indicator.connect();
+    await indicator.connect(
+      watcherName: 'org.kde.StatusNotifierWatcher.PropertyTest',
+      watcherPath: '/StatusNotifierWatcher/PropertyTest',
+    );
   });
 
   tearDown(() async {
     await indicator.close();
-    await client.releaseName('org.kde.StatusNotifierWatcher');
+    await client.releaseName('org.kde.StatusNotifierWatcher.PropertyTest');
     client.unregisterObject(watcher);
     await client.close();
     await listenerClient.close();
