@@ -130,14 +130,14 @@ class AppIndicator {
       AppIndicatorCategory category = AppIndicatorCategory.applicationStatus})
       : _client = DBusClient.session(),
         _object = _AppIndicatorObject(
-            DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}')) {
+            const DBusObjectPath.unchecked('/StatusNotifierItem')) {
     _serviceName = _buildServiceName(id);
     _object.id = id;
     _object.category = category.name;
     _object.menu = _object.path; // Menu is on the same object path
     _object.iconThemePath = '';
     _object.title = '';
-    _object.status = AppIndicatorStatus.passive.name;
+    _object.status = AppIndicatorStatus.active.name;
     _object.attentionIconName = '';
 
     this.iconName = iconName;
@@ -499,7 +499,9 @@ class AppIndicator {
     await _client.requestName(_serviceName);
     _isConnected = true;
     await _flushPendingSignals();
-    await _object.emitNewIcon(); // Explicitly trigger icon fetch after connect
+    await _object.emitNewStatus(_object.status);
+    await _object.emitNewIcon();
+    await _object.emitNewIconThemePath(_object.iconThemePath);
 
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
@@ -529,26 +531,10 @@ class AppIndicator {
   }
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
-    final registrationTargets = <String>[
-      _object.path.toString(),
-      _serviceName,
-      '$_serviceName${_object.path}',
-    ];
-
-    Object? lastError;
-    for (final target in registrationTargets) {
-      try {
-        await watcher.callRegisterStatusNotifierItem(target);
-        _registeredItemId = target;
-        return;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (lastError != null) {
-      throw lastError;
-    }
+    // Registering with the well-known bus name is the most standard and compatible way.
+    // The watcher will default to the standard /StatusNotifierItem path.
+    await watcher.callRegisterStatusNotifierItem(_serviceName);
+    _registeredItemId = _serviceName;
   }
 
   bool _isWatcherUnavailable(Object error) {
