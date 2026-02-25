@@ -1,6 +1,5 @@
 @TestOn('linux')
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
 import 'package:dbus/dbus.dart';
@@ -42,7 +41,8 @@ void main() {
       await Future.delayed(Duration(milliseconds: 100));
       retries++;
     }
-    expect(MockWatcher.registeredItems, isNotEmpty, reason: 'Service not registered');
+    expect(MockWatcher.registeredItems, isNotEmpty,
+        reason: 'Service not registered');
 
     final serviceName = MockWatcher.registeredItems.last;
 
