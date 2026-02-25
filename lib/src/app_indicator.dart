@@ -14,6 +14,10 @@ import 'status_notifier_watcher.dart';
 export 'dbus_menu.dart' show DBusMenuItem;
 export 'enums.dart';
 
+const _kStatusNotifierItemInterface = 'org.kde.StatusNotifierItem';
+const _kFreedesktopStatusNotifierItemInterface =
+    'org.freedesktop.StatusNotifierItem';
+
 /// Event arguments for scroll events.
 class ScrollEvent {
   final int delta;
@@ -538,8 +542,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
-        methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
+    if (methodCall.interface == _kStatusNotifierItemInterface ||
+        methodCall.interface == _kFreedesktopStatusNotifierItemInterface) {
       return super.handleMethodCall(methodCall);
     } else if (methodCall.interface == 'com.canonical.dbusmenu') {
       return menuImpl.handleMethodCall(methodCall);
@@ -605,21 +609,21 @@ class _AppIndicatorObject extends StatusNotifierItem {
   }
 
   Future<void> emitNewOverlayIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
+    await emitSignal(_kStatusNotifierItemInterface, 'NewOverlayIcon', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewOverlayIcon', []);
+        _kFreedesktopStatusNotifierItemInterface, 'NewOverlayIcon', []);
   }
 
   @override
   Future<void> emitNewAttentionIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal(_kStatusNotifierItemInterface, 'NewAttentionIcon', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
+        _kFreedesktopStatusNotifierItemInterface, 'NewAttentionIcon', []);
   }
 
   Future<void> emitNewAttentionMovie() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
+    await emitSignal(_kStatusNotifierItemInterface, 'NewAttentionMovie', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionMovie', []);
+        _kFreedesktopStatusNotifierItemInterface, 'NewAttentionMovie', []);
   }
 }
