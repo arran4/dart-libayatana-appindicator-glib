@@ -55,6 +55,9 @@ class DBusActionGroup extends DBusObject {
     }
 
     if (methodCall.name == 'Describe') {
+      if (methodCall.signature != DBusSignature('s')) {
+        return DBusMethodErrorResponse.invalidArgs();
+      }
       final name = methodCall.values[0].asString();
       final action = _actions[name];
       if (action == null) {
@@ -62,6 +65,17 @@ class DBusActionGroup extends DBusObject {
             .unknownMethod(); // Or a more specific error
       }
       return DBusMethodSuccessResponse([action.toDescription()]);
+    } else if (methodCall.name == 'DescribeAll') {
+      if (methodCall.signature != DBusSignature('')) {
+        return DBusMethodErrorResponse.invalidArgs();
+      }
+      var descriptions = <DBusValue, DBusValue>{};
+      for (var action in _actions.values) {
+        descriptions[DBusString(action.name)] = action.toDescription();
+      }
+      return DBusMethodSuccessResponse([
+        DBusDict(DBusSignature('s'), DBusSignature('(bgav)'), descriptions)
+      ]);
     } else if (methodCall.name == 'Activate') {
       final name = methodCall.values[0].asString();
       final parameter = methodCall.values[1] as DBusArray;
