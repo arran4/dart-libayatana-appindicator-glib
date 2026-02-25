@@ -160,13 +160,16 @@ class AppIndicator {
     };
   }
 
+  static final _sanitizeRegExp = RegExp(r'[^a-zA-Z0-9]');
+  static final _startsWithDigitRegExp = RegExp(r'[0-9]');
+
   static String _sanitizeId(String id) {
-    var sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    var sanitized = id.replaceAll(_sanitizeRegExp, '_');
     if (sanitized.isEmpty || sanitized.replaceAll('_', '').isEmpty) {
       final hash = md5.convert(utf8.encode(id)).toString().substring(0, 8);
       return 'indicator_$hash';
     }
-    if (sanitized.startsWith(RegExp(r'[0-9]'))) {
+    if (sanitized.startsWith(_startsWithDigitRegExp)) {
       return 'indicator_$sanitized';
     }
     return sanitized;
