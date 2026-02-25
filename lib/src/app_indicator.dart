@@ -160,25 +160,33 @@ class AppIndicator {
     };
   }
 
-  static String _sanitizeId(String id) {
-    var sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-    if (sanitized.isEmpty || sanitized.replaceAll('_', '').isEmpty) {
+  static final _cleanIdInvalid = RegExp(r'[^a-zA-Z0-9_]');
+  static final _cleanIdCollapse = RegExp(r'_+');
+  static final _cleanIdTrim = RegExp(r'^_+|_+$');
+  static final _startsWithDigitRegExp = RegExp(r'[0-9]');
+
+  static String _cleanId(String id) {
+    var sanitized = id.replaceAll(_cleanIdInvalid, '_');
+    sanitized = sanitized.replaceAll(_cleanIdCollapse, '_');
+    sanitized = sanitized.replaceAll(_cleanIdTrim, '');
+
+    if (sanitized.isEmpty) {
       final hash = md5.convert(utf8.encode(id)).toString().substring(0, 8);
       return 'indicator_$hash';
     }
-    if (sanitized.startsWith(RegExp(r'[0-9]'))) {
+    if (sanitized.startsWith(_startsWithDigitRegExp)) {
       return 'indicator_$sanitized';
     }
     return sanitized;
   }
 
   static DBusObjectPath _buildObjectPath(String id) {
-    return DBusObjectPath('/org/ayatana/appindicator/${_sanitizeId(id)}');
+    return DBusObjectPath('/org/ayatana/appindicator/${_cleanId(id)}');
   }
 
   static String _buildServiceName(String id) {
     final rand = Random().nextInt(1000000);
-    return 'org.ayatana.appindicator.${_sanitizeId(id)}.p$pid.v$rand';
+    return 'org.ayatana.appindicator.${_cleanId(id)}.p$pid.v$rand';
   }
 
   Future<void> connect({String? watcherName, String? watcherPath}) async {
