@@ -263,51 +263,58 @@ class AppIndicator {
   // Properties mapping
   String get title => _object.title;
   set title(String value) {
-    _object.title = value;
-    _queueSignal(_PendingSignal.newTitle);
+    _updateProperty(() {
+      _object.title = value;
+    }, _PendingSignal.newTitle);
   }
 
   String get label => _object.xAyatanaLabel;
   set label(String value) {
-    _object.xAyatanaLabel = value;
-    _queueSignal(_PendingSignal.newLabel);
+    _updateProperty(() {
+      _object.xAyatanaLabel = value;
+    }, _PendingSignal.newLabel);
   }
 
   String get labelGuide => _object.xAyatanaLabelGuide;
   set labelGuide(String value) {
-    _object.xAyatanaLabelGuide = value;
-    _queueSignal(_PendingSignal.newLabel);
+    _updateProperty(() {
+      _object.xAyatanaLabelGuide = value;
+    }, _PendingSignal.newLabel);
   }
 
   AppIndicatorStatus get status =>
       AppIndicatorStatus.values.firstWhere((e) => e.name == _object.status);
   set status(AppIndicatorStatus value) {
-    _object.status = value.name;
-    _updatePaths();
-    _queueSignal(_PendingSignal.newStatus);
+    _updateProperty(() {
+      _object.status = value.name;
+      _updatePaths();
+    }, _PendingSignal.newStatus);
   }
 
   String get iconName => _rawIconName;
   set iconName(String value) {
-    _rawIconName = value;
-    _updatePaths();
-    _queueSignal(_PendingSignal.newIcon);
+    _updateProperty(() {
+      _rawIconName = value;
+      _updatePaths();
+    }, _PendingSignal.newIcon);
   }
 
   String get attentionIconName => _rawAttentionIconName;
   set attentionIconName(String value) {
-    _rawAttentionIconName = value;
-    _updatePaths();
-    _queueSignal(_PendingSignal.newAttentionIcon);
+    _updateProperty(() {
+      _rawAttentionIconName = value;
+      _updatePaths();
+    }, _PendingSignal.newAttentionIcon);
   }
 
   String get iconThemePath => _manualIconThemePath.isNotEmpty
       ? _manualIconThemePath
       : _object.iconThemePath;
   set iconThemePath(String value) {
-    _manualIconThemePath = value;
-    _object.iconThemePath = value;
-    _queueSignal(_PendingSignal.newIconThemePath);
+    _updateProperty(() {
+      _manualIconThemePath = value;
+      _object.iconThemePath = value;
+    }, _PendingSignal.newIconThemePath);
   }
 
   void _updatePaths() {
@@ -342,14 +349,16 @@ class AppIndicator {
 
   String get tooltipTitle => _object.toolTipTitle;
   set tooltipTitle(String value) {
-    _object.toolTipTitle = value;
-    _queueSignal(_PendingSignal.newToolTip);
+    _updateProperty(() {
+      _object.toolTipTitle = value;
+    }, _PendingSignal.newToolTip);
   }
 
   String get tooltipDescription => _object.toolTipDescription;
   set tooltipDescription(String description) {
-    _object.toolTipDescription = description;
-    _queueSignal(_PendingSignal.newToolTip);
+    _updateProperty(() {
+      _object.toolTipDescription = description;
+    }, _PendingSignal.newToolTip);
   }
 
   bool get itemIsMenu => _object.itemIsMenu;
@@ -371,8 +380,9 @@ class AppIndicator {
         );
       }).toList();
   set iconPixmaps(List<IconPixmap> value) {
-    _object.iconPixmap = value.map((v) => v.toDBus()).toList();
-    _queueSignal(_PendingSignal.newIcon);
+    _updateProperty(() {
+      _object.iconPixmap = value.map((v) => v.toDBus()).toList();
+    }, _PendingSignal.newIcon);
   }
 
   List<IconPixmap> get attentionIconPixmaps =>
@@ -385,14 +395,16 @@ class AppIndicator {
         );
       }).toList();
   set attentionIconPixmaps(List<IconPixmap> value) {
-    _object.attentionIconPixmap = value.map((v) => v.toDBus()).toList();
-    _queueSignal(_PendingSignal.newAttentionIcon);
+    _updateProperty(() {
+      _object.attentionIconPixmap = value.map((v) => v.toDBus()).toList();
+    }, _PendingSignal.newAttentionIcon);
   }
 
   String get overlayIconName => _object.overlayIconName;
   set overlayIconName(String value) {
-    _object.overlayIconName = value;
-    _queueSignal(_PendingSignal.newOverlayIcon);
+    _updateProperty(() {
+      _object.overlayIconName = value;
+    }, _PendingSignal.newOverlayIcon);
   }
 
   List<IconPixmap> get overlayIconPixmaps => _object.overlayIconPixmap.map((v) {
@@ -404,14 +416,16 @@ class AppIndicator {
         );
       }).toList();
   set overlayIconPixmaps(List<IconPixmap> value) {
-    _object.overlayIconPixmap = value.map((v) => v.toDBus()).toList();
-    _queueSignal(_PendingSignal.newOverlayIcon);
+    _updateProperty(() {
+      _object.overlayIconPixmap = value.map((v) => v.toDBus()).toList();
+    }, _PendingSignal.newOverlayIcon);
   }
 
   String get attentionMovieName => _object.attentionMovieName;
   set attentionMovieName(String value) {
-    _object.attentionMovieName = value;
-    _queueSignal(_PendingSignal.newAttentionMovie);
+    _updateProperty(() {
+      _object.attentionMovieName = value;
+    }, _PendingSignal.newAttentionMovie);
   }
 
   void setMenu(List<dm.DBusMenuItem> items) {
@@ -461,6 +475,11 @@ class AppIndicator {
     } catch (_) {
       return false;
     }
+  }
+
+  void _updateProperty(void Function() update, _PendingSignal signal) {
+    update();
+    _queueSignal(signal);
   }
 
   void _queueSignal(_PendingSignal signal) {
