@@ -279,8 +279,8 @@ class AppIndicator {
     _queueSignal(_PendingSignal.newLabel);
   }
 
-  AppIndicatorStatus get status =>
-      AppIndicatorStatus.values.firstWhere((e) => e.dbusValue == _object.status);
+  AppIndicatorStatus get status => AppIndicatorStatus.values
+      .firstWhere((e) => e.dbusValue == _object.status);
   set status(AppIndicatorStatus value) {
     _object.status = value.dbusValue;
     _updatePaths();
