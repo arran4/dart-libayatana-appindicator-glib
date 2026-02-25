@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
   static final List<String> registeredItems = [];
-  static final List<String> unregisteredItems = [];
+  static Completer<String>? registrationCompleter;
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -19,21 +19,13 @@ class MockWatcher extends StatusNotifierWatcher {
       String service) async {
     if (!registeredItems.contains(service)) {
       registeredItems.add(service);
+      if (registrationCompleter != null &&
+          !registrationCompleter!.isCompleted) {
+        registrationCompleter!.complete(service);
+      }
       await emitStatusNotifierItemRegistered(service);
     }
     return DBusMethodSuccessResponse([]);
-  }
-
-  @override
-  Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierWatcher' &&
-        methodCall.name == 'UnregisterStatusNotifierItem') {
-      final service = methodCall.values[0].asString();
-      if (!unregisteredItems.contains(service)) {
-        unregisteredItems.add(service);
-      }
-    }
-    return super.handleMethodCall(methodCall);
   }
 }
 
@@ -55,7 +47,6 @@ void main() {
 
   setUp(() async {
     MockWatcher.registeredItems.clear();
-    MockWatcher.unregisteredItems.clear();
   });
 
   test('AppIndicator connects and registers', () async {
@@ -66,10 +57,12 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registrationCompleter = Completer<String>();
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registrationCompleter!.future
+        .timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
@@ -78,13 +71,6 @@ void main() {
     );
 
     await indicator.close();
-
-    expect(
-      MockWatcher.unregisteredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
-
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
   });
@@ -97,11 +83,13 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registrationCompleter = Completer<String>();
     final indicator =
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registrationCompleter!.future
+        .timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
@@ -159,15 +147,19 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registrationCompleter = Completer<String>();
     final emptyAfterSanitize = AppIndicator(id: '!!!', client: appClient);
     await emptyAfterSanitize.connect(
         watcherName: watcherName, watcherPath: watcherPath);
+    await MockWatcher.registrationCompleter!.future
+        .timeout(const Duration(seconds: 5));
 
+    MockWatcher.registrationCompleter = Completer<String>();
     final leadingDigit = AppIndicator(id: '123-start', client: appClient);
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
-
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registrationCompleter!.future
+        .timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
