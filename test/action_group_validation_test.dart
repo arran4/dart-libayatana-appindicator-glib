@@ -3,7 +3,9 @@ import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('DBusActionGroup Describe returns invalidArgs for incorrect signature (empty)', () async {
+  test(
+      'DBusActionGroup Describe returns invalidArgs for incorrect signature (empty)',
+      () async {
     var group = DBusActionGroup(DBusObjectPath('/test'));
     var call = DBusMethodCall(
       sender: 'sender',
@@ -13,10 +15,13 @@ void main() {
     );
     var response = await group.handleMethodCall(call);
     expect(response, isA<DBusMethodErrorResponse>());
-    expect((response as DBusMethodErrorResponse).errorName, 'org.freedesktop.DBus.Error.InvalidArgs');
+    expect((response as DBusMethodErrorResponse).errorName,
+        'org.freedesktop.DBus.Error.InvalidArgs');
   });
 
-  test('DBusActionGroup Describe returns invalidArgs for incorrect signature (wrong type)', () async {
+  test(
+      'DBusActionGroup Describe returns invalidArgs for incorrect signature (wrong type)',
+      () async {
     var group = DBusActionGroup(DBusObjectPath('/test'));
     var call = DBusMethodCall(
       sender: 'sender',
@@ -26,10 +31,13 @@ void main() {
     );
     var response = await group.handleMethodCall(call);
     expect(response, isA<DBusMethodErrorResponse>());
-    expect((response as DBusMethodErrorResponse).errorName, 'org.freedesktop.DBus.Error.InvalidArgs');
+    expect((response as DBusMethodErrorResponse).errorName,
+        'org.freedesktop.DBus.Error.InvalidArgs');
   });
 
-  test('DBusActionGroup DescribeAll returns invalidArgs for incorrect signature', () async {
+  test(
+      'DBusActionGroup DescribeAll returns invalidArgs for incorrect signature',
+      () async {
     var group = DBusActionGroup(DBusObjectPath('/test'));
     var call = DBusMethodCall(
       sender: 'sender',
@@ -39,10 +47,12 @@ void main() {
     );
     var response = await group.handleMethodCall(call);
     expect(response, isA<DBusMethodErrorResponse>());
-    expect((response as DBusMethodErrorResponse).errorName, 'org.freedesktop.DBus.Error.InvalidArgs');
+    expect((response as DBusMethodErrorResponse).errorName,
+        'org.freedesktop.DBus.Error.InvalidArgs');
   });
 
-  test('DBusActionGroup DescribeAll returns descriptions for all actions', () async {
+  test('DBusActionGroup DescribeAll returns descriptions for all actions',
+      () async {
     var group = DBusActionGroup(DBusObjectPath('/test'));
     group.addAction(DBusAction('action1', enabled: true));
     group.addAction(DBusAction('action2', enabled: false));
