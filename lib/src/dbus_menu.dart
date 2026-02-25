@@ -109,7 +109,9 @@ class DBusMenu extends DBusObject {
     } else if (methodCall.name == 'Event') {
       final id = methodCall.values[0].asInt32();
       final eventId = methodCall.values[1].asString();
-      return _handleEvent(id, eventId);
+      final data = methodCall.values[2];
+      final timestamp = methodCall.values[3].asUint32();
+      return _handleEvent(id, eventId, data, timestamp);
     } else if (methodCall.name == 'GetGroupProperties') {
       return DBusMethodSuccessResponse(
           [DBusArray(DBusSignature('(ia{sv})'), [])]);
@@ -164,7 +166,8 @@ class DBusMenu extends DBusObject {
     ]);
   }
 
-  Future<DBusMethodResponse> _handleEvent(int id, String eventId) async {
+  Future<DBusMethodResponse> _handleEvent(
+      int id, String eventId, DBusValue data, int timestamp) async {
     if (eventId == 'clicked') {
       final item = _findItemById(_rootItems, id);
       item?.onActivated?.call();
