@@ -246,7 +246,7 @@ class AppIndicator {
   }
 
   set iconPixmaps(List<IconPixmap> pixmaps) {
-    _object.iconPixmaps = pixmaps;
+    _object.iconPixmap = pixmaps.map((p) => p.toDBus()).toList();
     _queueSignal(_PendingSignal.newIcon);
   }
 
@@ -263,7 +263,7 @@ class AppIndicator {
   }
 
   set overlayIconPixmaps(List<IconPixmap> pixmaps) {
-    _object.overlayIconPixmaps = pixmaps;
+    _object.overlayIconPixmap = pixmaps.map((p) => p.toDBus()).toList();
     _queueSignal(_PendingSignal.newOverlayIcon);
   }
 
@@ -273,7 +273,7 @@ class AppIndicator {
   }
 
   set attentionIconPixmaps(List<IconPixmap> pixmaps) {
-    _object.attentionIconPixmaps = pixmaps;
+    _object.attentionIconPixmap = pixmaps.map((p) => p.toDBus()).toList();
     _queueSignal(_PendingSignal.newAttentionIcon);
   }
 
@@ -286,7 +286,7 @@ class AppIndicator {
   }
 
   set overlayAccessibleDesc(String description) {
-    _object.overlayAccessibleDesc = description;
+    _object.overlayIconAccessibleDesc = description;
   }
 
   String get title => _object.title;
@@ -327,7 +327,9 @@ class AppIndicator {
     if (isAttention) {
       if (_looksLikePath(name)) {
         final file = File(name);
-        _object.attentionIconName = file.uri.pathSegments.last;
+        final fileName = file.uri.pathSegments.last;
+        _object.attentionIconName =
+            fileName.contains('.') ? fileName.split('.').first : fileName;
       } else {
         _object.attentionIconName = name;
       }
@@ -335,7 +337,9 @@ class AppIndicator {
     } else {
       if (_looksLikePath(name)) {
         final file = File(name);
-        _object.iconName = file.uri.pathSegments.last;
+        final fileName = file.uri.pathSegments.last;
+        _object.iconName =
+            fileName.contains('.') ? fileName.split('.').first : fileName;
       } else {
         _object.iconName = name;
       }
@@ -355,7 +359,7 @@ class AppIndicator {
     }
 
     if (_looksLikePath(relevantIcon)) {
-      path = File(relevantIcon).parent.path;
+      path = File(relevantIcon).absolute.parent.path;
     }
 
     if (_object.iconThemePath != path) {
@@ -665,22 +669,24 @@ class _AppIndicatorObject extends StatusNotifierItem {
   final DBusActionGroup actionGroupImpl;
 
   // Tooltip
-  String toolTipIconName = '';
-  String toolTipTitle = '';
-  String toolTipDescription = '';
+  String get toolTipIconName =>
+      (toolTip.children[0] as DBusString).value;
+  set toolTipIconName(String value) =>
+      toolTip.children[0] = DBusString(value);
+
+  String get toolTipTitle =>
+      (toolTip.children[2] as DBusString).value;
+  set toolTipTitle(String value) =>
+      toolTip.children[2] = DBusString(value);
+
+  String get toolTipDescription =>
+      (toolTip.children[3] as DBusString).value;
+  set toolTipDescription(String value) =>
+      toolTip.children[3] = DBusString(value);
 
   String? secondaryActivateTarget;
   String? primaryActivateTarget;
   String? doubleClickTarget;
-
-  int windowId = 0;
-  bool itemIsMenu = false;
-  List<IconPixmap> iconPixmaps = const <IconPixmap>[];
-  List<IconPixmap> attentionIconPixmaps = const <IconPixmap>[];
-  String overlayIconName = '';
-  String overlayAccessibleDesc = '';
-  List<IconPixmap> overlayIconPixmaps = const <IconPixmap>[];
-  String attentionMovieName = '';
 
   Function(int, String)? onScroll;
   Function(int, int)? onSecondaryActivate;
@@ -693,110 +699,6 @@ class _AppIndicatorObject extends StatusNotifierItem {
       : menuImpl = DBusMenu(path),
         actionGroupImpl = DBusActionGroup(path),
         super(path: path);
-
-  // Overrides for StatusNotifierItem properties
-  @override
-  Future<DBusMethodResponse> getId() async =>
-      DBusMethodSuccessResponse([DBusString(id)]);
-
-  @override
-  Future<DBusMethodResponse> getCategory() async =>
-      DBusMethodSuccessResponse([DBusString(category)]);
-
-  @override
-  Future<DBusMethodResponse> getStatus() async =>
-      DBusMethodSuccessResponse([DBusString(status)]);
-
-  @override
-  Future<DBusMethodResponse> getIconName() async =>
-      DBusMethodSuccessResponse([DBusString(iconName)]);
-
-  @override
-  Future<DBusMethodResponse> getAttentionIconName() async =>
-      DBusMethodSuccessResponse([DBusString(attentionIconName)]);
-
-  @override
-  Future<DBusMethodResponse> getIconAccessibleDesc() async =>
-      DBusMethodSuccessResponse([DBusString(iconAccessibleDesc)]);
-
-  @override
-  Future<DBusMethodResponse> getAttentionAccessibleDesc() async =>
-      DBusMethodSuccessResponse([DBusString(attentionAccessibleDesc)]);
-
-  @override
-  Future<DBusMethodResponse> getTitle() async =>
-      DBusMethodSuccessResponse([DBusString(title)]);
-
-  @override
-  Future<DBusMethodResponse> getIconThemePath() async =>
-      DBusMethodSuccessResponse([DBusString(iconThemePath)]);
-
-  @override
-  Future<DBusMethodResponse> getMenu() async =>
-      DBusMethodSuccessResponse([menu]);
-
-  @override
-  Future<DBusMethodResponse> getXAyatanaLabel() async =>
-      DBusMethodSuccessResponse([DBusString(xAyatanaLabel)]);
-
-  @override
-  Future<DBusMethodResponse> getXAyatanaLabelGuide() async =>
-      DBusMethodSuccessResponse([DBusString(xAyatanaLabelGuide)]);
-
-  @override
-  Future<DBusMethodResponse> getXAyatanaOrderingIndex() async =>
-      DBusMethodSuccessResponse([DBusUint32(xAyatanaOrderingIndex)]);
-
-  @override
-  Future<DBusMethodResponse> getToolTip() async {
-    return DBusMethodSuccessResponse([
-      DBusStruct([
-        DBusString(toolTipIconName),
-        DBusArray(DBusSignature('(iiay)'), []),
-        DBusString(toolTipTitle),
-        DBusString(toolTipDescription)
-      ])
-    ]);
-  }
-
-  Future<DBusMethodResponse> getWindowId() async =>
-      DBusMethodSuccessResponse([DBusUint32(windowId)]);
-
-  Future<DBusMethodResponse> getItemIsMenu() async =>
-      DBusMethodSuccessResponse([DBusBoolean(itemIsMenu)]);
-
-  Future<DBusMethodResponse> getIconPixmap() async =>
-      DBusMethodSuccessResponse([
-        DBusArray(
-          DBusSignature('(iiay)'),
-          iconPixmaps.map((frame) => frame.toDBus()).toList(),
-        ),
-      ]);
-
-  Future<DBusMethodResponse> getAttentionIconPixmap() async =>
-      DBusMethodSuccessResponse([
-        DBusArray(
-          DBusSignature('(iiay)'),
-          attentionIconPixmaps.map((frame) => frame.toDBus()).toList(),
-        ),
-      ]);
-
-  Future<DBusMethodResponse> getOverlayIconName() async =>
-      DBusMethodSuccessResponse([DBusString(overlayIconName)]);
-
-  Future<DBusMethodResponse> getOverlayIconAccessibleDesc() async =>
-      DBusMethodSuccessResponse([DBusString(overlayAccessibleDesc)]);
-
-  Future<DBusMethodResponse> getOverlayIconPixmap() async =>
-      DBusMethodSuccessResponse([
-        DBusArray(
-          DBusSignature('(iiay)'),
-          overlayIconPixmaps.map((frame) => frame.toDBus()).toList(),
-        ),
-      ]);
-
-  Future<DBusMethodResponse> getAttentionMovieName() async =>
-      DBusMethodSuccessResponse([DBusString(attentionMovieName)]);
 
   // Methods implementation
   @override
@@ -821,17 +723,20 @@ class _AppIndicatorObject extends StatusNotifierItem {
     return DBusMethodSuccessResponse([]);
   }
 
+  @override
   Future<DBusMethodResponse> doActivate(int x, int y) async {
     _handlePrimaryAction();
     onActivate?.call(x, y);
     return DBusMethodSuccessResponse([]);
   }
 
+  @override
   Future<DBusMethodResponse> doContextMenu(int x, int y) async {
     onContextMenu?.call(x, y);
     return DBusMethodSuccessResponse([]);
   }
 
+  @override
   Future<DBusMethodResponse> doXAyatanaActivate(
       int x, int y, int timestamp) async {
     _handlePrimaryAction();
@@ -866,68 +771,9 @@ class _AppIndicatorObject extends StatusNotifierItem {
     }
   }
 
-  // Delegate other interfaces
   @override
   List<DBusIntrospectInterface> introspect() {
     final interfaces = super.introspect();
-    final statusInterface = interfaces.firstWhere(
-      (interface) => interface.name == 'org.kde.StatusNotifierItem',
-    );
-
-    statusInterface.methods.addAll([
-      DBusIntrospectMethod(
-        'Activate',
-        args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y'),
-        ],
-      ),
-      DBusIntrospectMethod(
-        'ContextMenu',
-        args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y'),
-        ],
-      ),
-      DBusIntrospectMethod(
-        'XAyatanaActivate',
-        args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y'),
-          DBusIntrospectArgument(
-            DBusSignature('u'),
-            DBusArgumentDirection.in_,
-            name: 'timestamp',
-          ),
-        ],
-      ),
-    ]);
-
-    statusInterface.properties.addAll([
-      DBusIntrospectProperty('WindowId', DBusSignature('u'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('ItemIsMenu', DBusSignature('b'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('IconPixmap', DBusSignature('a(iiay)'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('OverlayIconName', DBusSignature('s'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('OverlayIconAccessibleDesc', DBusSignature('s'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('OverlayIconPixmap', DBusSignature('a(iiay)'),
-          access: DBusPropertyAccess.read),
-      DBusIntrospectProperty('AttentionMovieName', DBusSignature('s'),
-          access: DBusPropertyAccess.read),
-    ]);
-
     interfaces.addAll(menuImpl.introspect());
     interfaces.addAll(actionGroupImpl.introspect());
     return interfaces;
@@ -935,31 +781,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierItem') {
-      if (methodCall.name == 'Activate') {
-        if (methodCall.signature != DBusSignature('ii')) {
-          return DBusMethodErrorResponse.invalidArgs();
-        }
-        return doActivate(
-            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
-      }
-      if (methodCall.name == 'ContextMenu') {
-        if (methodCall.signature != DBusSignature('ii')) {
-          return DBusMethodErrorResponse.invalidArgs();
-        }
-        return doContextMenu(
-            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
-      }
-      if (methodCall.name == 'XAyatanaActivate') {
-        if (methodCall.signature != DBusSignature('iiu')) {
-          return DBusMethodErrorResponse.invalidArgs();
-        }
-        return doXAyatanaActivate(
-          methodCall.values[0].asInt32(),
-          methodCall.values[1].asInt32(),
-          methodCall.values[2].asUint32(),
-        );
-      }
+    if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
+        methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
       return super.handleMethodCall(methodCall);
     } else if (methodCall.interface == 'org.gtk.Menus') {
       return menuImpl.handleMethodCall(methodCall);
@@ -967,54 +790,5 @@ class _AppIndicatorObject extends StatusNotifierItem {
       return actionGroupImpl.handleMethodCall(methodCall);
     }
     return DBusMethodErrorResponse.unknownInterface();
-  }
-
-  @override
-  Future<DBusMethodResponse> getProperty(String interface, String name) async {
-    if (interface == 'org.kde.StatusNotifierItem') {
-      switch (name) {
-        case 'WindowId':
-          return getWindowId();
-        case 'ItemIsMenu':
-          return getItemIsMenu();
-        case 'IconPixmap':
-          return getIconPixmap();
-        case 'AttentionIconPixmap':
-          return getAttentionIconPixmap();
-        case 'OverlayIconName':
-          return getOverlayIconName();
-        case 'OverlayIconAccessibleDesc':
-          return getOverlayIconAccessibleDesc();
-        case 'OverlayIconPixmap':
-          return getOverlayIconPixmap();
-        case 'AttentionMovieName':
-          return getAttentionMovieName();
-      }
-    }
-
-    return super.getProperty(interface, name);
-  }
-
-  @override
-  Future<DBusMethodResponse> getAllProperties(String interface) async {
-    final response = await super.getAllProperties(interface);
-    if (interface != 'org.kde.StatusNotifierItem') {
-      return response;
-    }
-
-    final dict = Map<String, DBusValue>.from(
-        response.returnValues[0].asStringVariantDict());
-    dict['WindowId'] = (await getWindowId()).returnValues[0];
-    dict['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
-    dict['IconPixmap'] = (await getIconPixmap()).returnValues[0];
-    dict['AttentionIconPixmap'] =
-        (await getAttentionIconPixmap()).returnValues[0];
-    dict['OverlayIconName'] = (await getOverlayIconName()).returnValues[0];
-    dict['OverlayIconAccessibleDesc'] =
-        (await getOverlayIconAccessibleDesc()).returnValues[0];
-    dict['OverlayIconPixmap'] = (await getOverlayIconPixmap()).returnValues[0];
-    dict['AttentionMovieName'] =
-        (await getAttentionMovieName()).returnValues[0];
-    return DBusMethodSuccessResponse([DBusDict.stringVariant(dict)]);
   }
 }

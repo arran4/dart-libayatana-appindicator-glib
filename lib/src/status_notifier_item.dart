@@ -29,6 +29,14 @@ class StatusNotifierItem extends DBusObject {
     DBusString(''),
     DBusString(''),
   ]);
+  int windowId = 0;
+  bool itemIsMenu = false;
+  List<DBusValue> iconPixmap = [];
+  List<DBusValue> attentionIconPixmap = [];
+  String overlayIconName = '';
+  String overlayIconAccessibleDesc = '';
+  List<DBusValue> overlayIconPixmap = [];
+  String attentionMovieName = '';
 
   /// Gets value of property org.kde.StatusNotifierItem.Id
   Future<DBusMethodResponse> getId() async {
@@ -98,6 +106,65 @@ class StatusNotifierItem extends DBusObject {
   /// Gets value of property org.kde.StatusNotifierItem.ToolTip
   Future<DBusMethodResponse> getToolTip() async {
     return DBusMethodSuccessResponse([toolTip]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.WindowId
+  Future<DBusMethodResponse> getWindowId() async {
+    return DBusMethodSuccessResponse([DBusUint32(windowId)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.ItemIsMenu
+  Future<DBusMethodResponse> getItemIsMenu() async {
+    return DBusMethodSuccessResponse([DBusBoolean(itemIsMenu)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.IconPixmap
+  Future<DBusMethodResponse> getIconPixmap() async {
+    return DBusMethodSuccessResponse(
+        [DBusArray(DBusSignature('(iiay)'), iconPixmap)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.AttentionIconPixmap
+  Future<DBusMethodResponse> getAttentionIconPixmap() async {
+    return DBusMethodSuccessResponse(
+        [DBusArray(DBusSignature('(iiay)'), attentionIconPixmap)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.OverlayIconName
+  Future<DBusMethodResponse> getOverlayIconName() async {
+    return DBusMethodSuccessResponse([DBusString(overlayIconName)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.OverlayIconAccessibleDesc
+  Future<DBusMethodResponse> getOverlayIconAccessibleDesc() async {
+    return DBusMethodSuccessResponse([DBusString(overlayIconAccessibleDesc)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.OverlayIconPixmap
+  Future<DBusMethodResponse> getOverlayIconPixmap() async {
+    return DBusMethodSuccessResponse(
+        [DBusArray(DBusSignature('(iiay)'), overlayIconPixmap)]);
+  }
+
+  /// Gets value of property org.kde.StatusNotifierItem.AttentionMovieName
+  Future<DBusMethodResponse> getAttentionMovieName() async {
+    return DBusMethodSuccessResponse([DBusString(attentionMovieName)]);
+  }
+
+  /// Implementation of org.kde.StatusNotifierItem.Activate()
+  Future<DBusMethodResponse> doActivate(int x, int y) async {
+    return DBusMethodSuccessResponse([]);
+  }
+
+  /// Implementation of org.kde.StatusNotifierItem.ContextMenu()
+  Future<DBusMethodResponse> doContextMenu(int x, int y) async {
+    return DBusMethodSuccessResponse([]);
+  }
+
+  /// Implementation of org.kde.StatusNotifierItem.XAyatanaActivate()
+  Future<DBusMethodResponse> doXAyatanaActivate(
+      int x, int y, int timestamp) async {
+    return DBusMethodSuccessResponse([]);
   }
 
   /// Implementation of org.kde.StatusNotifierItem.Scroll()
@@ -172,6 +239,26 @@ class StatusNotifierItem extends DBusObject {
         DBusIntrospectMethod('XAyatanaSecondaryActivate', args: [
           DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
               name: 'timestamp')
+        ]),
+        DBusIntrospectMethod('Activate', args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y')
+        ]),
+        DBusIntrospectMethod('ContextMenu', args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y')
+        ]),
+        DBusIntrospectMethod('XAyatanaActivate', args: [
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'x'),
+          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+              name: 'y'),
+          DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
+              name: 'timestamp')
         ])
       ], signals: [
         DBusIntrospectSignal('NewIcon'),
@@ -220,14 +307,44 @@ class StatusNotifierItem extends DBusObject {
         DBusIntrospectProperty('XAyatanaOrderingIndex', DBusSignature('u'),
             access: DBusPropertyAccess.read),
         DBusIntrospectProperty('ToolTip', DBusSignature('(sa(iiay)ss)'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('WindowId', DBusSignature('u'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('ItemIsMenu', DBusSignature('b'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('IconPixmap', DBusSignature('a(iiay)'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('OverlayIconName', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('OverlayIconAccessibleDesc', DBusSignature('s'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('OverlayIconPixmap', DBusSignature('a(iiay)'),
+            access: DBusPropertyAccess.read),
+        DBusIntrospectProperty('AttentionMovieName', DBusSignature('s'),
             access: DBusPropertyAccess.read)
-      ])
+      ]),
+      DBusIntrospectInterface('org.freedesktop.StatusNotifierItem',
+          methods: introspect()
+              .firstWhere(
+                  (i) => i.name == 'org.kde.StatusNotifierItem')
+              .methods,
+          signals: introspect()
+              .firstWhere(
+                  (i) => i.name == 'org.kde.StatusNotifierItem')
+              .signals,
+          properties: introspect()
+              .firstWhere(
+                  (i) => i.name == 'org.kde.StatusNotifierItem')
+              .properties)
     ];
   }
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierItem') {
+    if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
+        methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
       if (methodCall.name == 'Scroll') {
         if (methodCall.signature != DBusSignature('is')) {
           return DBusMethodErrorResponse.invalidArgs();
@@ -245,6 +362,24 @@ class StatusNotifierItem extends DBusObject {
           return DBusMethodErrorResponse.invalidArgs();
         }
         return doXAyatanaSecondaryActivate(methodCall.values[0].asUint32());
+      } else if (methodCall.name == 'Activate') {
+        if (methodCall.signature != DBusSignature('ii')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doActivate(
+            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+      } else if (methodCall.name == 'ContextMenu') {
+        if (methodCall.signature != DBusSignature('ii')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doContextMenu(
+            methodCall.values[0].asInt32(), methodCall.values[1].asInt32());
+      } else if (methodCall.name == 'XAyatanaActivate') {
+        if (methodCall.signature != DBusSignature('iiu')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return doXAyatanaActivate(methodCall.values[0].asInt32(),
+            methodCall.values[1].asInt32(), methodCall.values[2].asUint32());
       } else {
         return DBusMethodErrorResponse.unknownMethod();
       }
@@ -255,7 +390,8 @@ class StatusNotifierItem extends DBusObject {
 
   @override
   Future<DBusMethodResponse> getProperty(String interface, String name) async {
-    if (interface == 'org.kde.StatusNotifierItem') {
+    if (interface == 'org.kde.StatusNotifierItem' ||
+        interface == 'org.freedesktop.StatusNotifierItem') {
       if (name == 'Id') {
         return getId();
       } else if (name == 'Category') {
@@ -284,6 +420,22 @@ class StatusNotifierItem extends DBusObject {
         return getXAyatanaOrderingIndex();
       } else if (name == 'ToolTip') {
         return getToolTip();
+      } else if (name == 'WindowId') {
+        return getWindowId();
+      } else if (name == 'ItemIsMenu') {
+        return getItemIsMenu();
+      } else if (name == 'IconPixmap') {
+        return getIconPixmap();
+      } else if (name == 'AttentionIconPixmap') {
+        return getAttentionIconPixmap();
+      } else if (name == 'OverlayIconName') {
+        return getOverlayIconName();
+      } else if (name == 'OverlayIconAccessibleDesc') {
+        return getOverlayIconAccessibleDesc();
+      } else if (name == 'OverlayIconPixmap') {
+        return getOverlayIconPixmap();
+      } else if (name == 'AttentionMovieName') {
+        return getAttentionMovieName();
       } else {
         return DBusMethodErrorResponse.unknownProperty();
       }
@@ -295,34 +447,30 @@ class StatusNotifierItem extends DBusObject {
   @override
   Future<DBusMethodResponse> setProperty(
       String interface, String name, DBusValue value) async {
-    if (interface == 'org.kde.StatusNotifierItem') {
-      if (name == 'Id') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'Category') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'Status') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'IconName') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'IconAccessibleDesc') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'AttentionIconName') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'AttentionAccessibleDesc') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'Title') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'IconThemePath') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'Menu') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'XAyatanaLabel') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'XAyatanaLabelGuide') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'XAyatanaOrderingIndex') {
-        return DBusMethodErrorResponse.propertyReadOnly();
-      } else if (name == 'ToolTip') {
+    if (interface == 'org.kde.StatusNotifierItem' ||
+        interface == 'org.freedesktop.StatusNotifierItem') {
+      if (name == 'Id' ||
+          name == 'Category' ||
+          name == 'Status' ||
+          name == 'IconName' ||
+          name == 'IconAccessibleDesc' ||
+          name == 'AttentionIconName' ||
+          name == 'AttentionAccessibleDesc' ||
+          name == 'Title' ||
+          name == 'IconThemePath' ||
+          name == 'Menu' ||
+          name == 'XAyatanaLabel' ||
+          name == 'XAyatanaLabelGuide' ||
+          name == 'XAyatanaOrderingIndex' ||
+          name == 'ToolTip' ||
+          name == 'WindowId' ||
+          name == 'ItemIsMenu' ||
+          name == 'IconPixmap' ||
+          name == 'AttentionIconPixmap' ||
+          name == 'OverlayIconName' ||
+          name == 'OverlayIconAccessibleDesc' ||
+          name == 'OverlayIconPixmap' ||
+          name == 'AttentionMovieName') {
         return DBusMethodErrorResponse.propertyReadOnly();
       } else {
         return DBusMethodErrorResponse.unknownProperty();
@@ -335,7 +483,8 @@ class StatusNotifierItem extends DBusObject {
   @override
   Future<DBusMethodResponse> getAllProperties(String interface) async {
     var properties = <String, DBusValue>{};
-    if (interface == 'org.kde.StatusNotifierItem') {
+    if (interface == 'org.kde.StatusNotifierItem' ||
+        interface == 'org.freedesktop.StatusNotifierItem') {
       properties['Id'] = (await getId()).returnValues[0];
       properties['Category'] = (await getCategory()).returnValues[0];
       properties['Status'] = (await getStatus()).returnValues[0];
@@ -355,6 +504,19 @@ class StatusNotifierItem extends DBusObject {
       properties['XAyatanaOrderingIndex'] =
           (await getXAyatanaOrderingIndex()).returnValues[0];
       properties['ToolTip'] = (await getToolTip()).returnValues[0];
+      properties['WindowId'] = (await getWindowId()).returnValues[0];
+      properties['ItemIsMenu'] = (await getItemIsMenu()).returnValues[0];
+      properties['IconPixmap'] = (await getIconPixmap()).returnValues[0];
+      properties['AttentionIconPixmap'] =
+          (await getAttentionIconPixmap()).returnValues[0];
+      properties['OverlayIconName'] =
+          (await getOverlayIconName()).returnValues[0];
+      properties['OverlayIconAccessibleDesc'] =
+          (await getOverlayIconAccessibleDesc()).returnValues[0];
+      properties['OverlayIconPixmap'] =
+          (await getOverlayIconPixmap()).returnValues[0];
+      properties['AttentionMovieName'] =
+          (await getAttentionMovieName()).returnValues[0];
     }
     return DBusMethodSuccessResponse([DBusDict.stringVariant(properties)]);
   }
