@@ -77,6 +77,17 @@ class IconPixmap {
   }
 }
 
+class AppIndicatorRegistrationException implements Exception {
+  final Object cause;
+  final StackTrace stackTrace;
+
+  AppIndicatorRegistrationException(this.cause, this.stackTrace);
+
+  @override
+  String toString() =>
+      'AppIndicatorRegistrationException: Failed to register with watcher: $cause';
+}
+
 /// A port of Ayatana AppIndicator to Dart.
 class AppIndicator {
   final String id;
@@ -240,7 +251,7 @@ class AppIndicator {
     }
 
     if (lastError != null) {
-      throw lastError;
+      throw AppIndicatorRegistrationException(lastError!, StackTrace.current);
     }
   }
 
