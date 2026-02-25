@@ -79,6 +79,9 @@ class IconPixmap {
 
 /// A port of Ayatana AppIndicator to Dart.
 class AppIndicator {
+  static final _nonAlphaNumericRegExp = RegExp(r'[^a-zA-Z0-9]');
+  static final _digitRegExp = RegExp(r'[0-9]');
+
   final String id;
   final AppIndicatorCategory category;
 
@@ -161,12 +164,12 @@ class AppIndicator {
   }
 
   static String _sanitizeId(String id) {
-    var sanitized = id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    var sanitized = id.replaceAll(_nonAlphaNumericRegExp, '_');
     if (sanitized.isEmpty || sanitized.replaceAll('_', '').isEmpty) {
       final hash = md5.convert(utf8.encode(id)).toString().substring(0, 8);
       return 'indicator_$hash';
     }
-    if (sanitized.startsWith(RegExp(r'[0-9]'))) {
+    if (sanitized.startsWith(_digitRegExp)) {
       return 'indicator_$sanitized';
     }
     return sanitized;
