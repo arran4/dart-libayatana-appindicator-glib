@@ -13,6 +13,9 @@ Future<void> main() async {
     category: AppIndicatorCategory.applicationStatus,
   );
 
+  log('Indicator created with ID: ${indicator.id}');
+  log('Primary Icon: ${indicator.iconName}');
+
   indicator
     ..status = AppIndicatorStatus.active
     ..title = 'Ayatana AppIndicator Dart Showcase'
@@ -24,11 +27,13 @@ Future<void> main() async {
         'Left click, middle click, right click, double click and scroll.'
     ..iconThemePath = Platform.script.resolve('assets').toFilePath();
 
+  log('Icon Theme Path: ${indicator.iconThemePath}');
+
   var percentage = 1;
   var showLabel = true;
   var attentionActive = false;
   var item3Enabled = true;
-  var localIconMode = false;
+  var localIconMode = true;
   var lastPrimaryClick = DateTime.fromMillisecondsSinceEpoch(0);
 
   late Timer heartbeat;
@@ -233,6 +238,7 @@ Future<void> main() async {
   });
 
   await indicator.connect();
+  log('Connected to D-Bus and registered with watcher.');
 
   if (!indicator.isWatcherAvailable) {
     log('No StatusNotifierWatcher is available on session bus.');
