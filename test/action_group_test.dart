@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:dbus/dbus.dart';
 import 'package:ayatana_appindicator/src/action_group.dart';
+import 'package:dbus/dbus.dart';
+import 'package:test/test.dart';
 
 void main() {
   test('DBusActionGroup exports actions correctly', () async {

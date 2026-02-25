@@ -121,9 +121,9 @@ class StatusNotifierItem extends DBusObject {
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewIconThemePath
-  Future<void> emitNewIconThemePath(String icon_theme_path) async {
+  Future<void> emitNewIconThemePath(String iconThemePath) async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewIconThemePath',
-        [DBusString(icon_theme_path)]);
+        [DBusString(iconThemePath)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewAttentionIcon
@@ -249,7 +249,7 @@ class StatusNotifierItem extends DBusObject {
         return DBusMethodErrorResponse.unknownMethod();
       }
     } else {
-      return DBusMethodErrorResponse.unknownInterface();
+      return super.handleMethodCall(methodCall);
     }
   }
 

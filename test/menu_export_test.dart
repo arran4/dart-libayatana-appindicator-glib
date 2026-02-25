@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:dbus/dbus.dart';
 import 'package:ayatana_appindicator/src/menu.dart';
+import 'package:dbus/dbus.dart';
+import 'package:test/test.dart';
 
 void main() {
   test('DBusMenu exports menu structure correctly', () async {

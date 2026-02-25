@@ -815,8 +815,9 @@ class _AppIndicatorObject extends StatusNotifierItem {
   @override
   Future<DBusMethodResponse> doXAyatanaSecondaryActivate(int timestamp) async {
     _handleSecondaryAction();
-    if (onXAyatanaSecondaryActivate != null)
+    if (onXAyatanaSecondaryActivate != null) {
       onXAyatanaSecondaryActivate!(timestamp);
+    }
     return DBusMethodSuccessResponse([]);
   }
 

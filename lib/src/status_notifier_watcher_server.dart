@@ -121,7 +121,7 @@ class StatusNotifierWatcher extends DBusObject {
         return DBusMethodErrorResponse.unknownMethod();
       }
     } else {
-      return DBusMethodErrorResponse.unknownInterface();
+      return super.handleMethodCall(methodCall);
     }
   }
 
