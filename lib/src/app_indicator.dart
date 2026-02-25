@@ -136,15 +136,18 @@ class AppIndicator {
     _object.status = AppIndicatorStatus.active.name;
     _object.attentionIconName = '';
     _object.menu = _object.path; // Canonical DBusMenu on same path
+    _object.itemIsMenu = true;
 
     this.iconName = iconName;
 
     // Connect object events to public streams
     _object.onScroll = (delta, orientation) {
+      stdout.writeln('[debug] AppIndicator: onScroll($delta, $orientation)');
       _scrollController.add(ScrollEvent(delta, orientation));
     };
 
     _object.onSecondaryActivate = (x, y) {
+      stdout.writeln('[debug] AppIndicator: onSecondaryActivate($x, $y)');
       _secondaryActivateController.add(SecondaryActivateEvent(x, y));
     };
 
@@ -158,6 +161,7 @@ class AppIndicator {
     };
 
     _object.onContextMenu = (x, y) {
+      stdout.writeln('[debug] AppIndicator: onContextMenu($x, $y)');
       _contextMenuController.add(ContextMenuEvent(x, y));
     };
 

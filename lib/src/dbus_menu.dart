@@ -35,6 +35,10 @@ class DBusMenu extends DBusObject {
             DBusIntrospectArgument(DBusSignature('v'), DBusArgumentDirection.in_, name: 'data'),
             DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_, name: 'timestamp'),
           ]),
+          DBusIntrospectMethod('AboutToShow', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_, name: 'id'),
+            DBusIntrospectArgument(DBusSignature('b'), DBusArgumentDirection.out, name: 'needUpdate'),
+          ]),
         ],
         signals: [
           DBusIntrospectSignal('LayoutUpdated', args: [
@@ -66,6 +70,8 @@ class DBusMenu extends DBusObject {
       return _handleEvent(id, eventId);
     } else if (methodCall.name == 'GetGroupProperties') {
       return DBusMethodSuccessResponse([DBusArray(DBusSignature('(ia{sv})'), [])]);
+    } else if (methodCall.name == 'AboutToShow') {
+      return DBusMethodSuccessResponse([DBusBoolean(false)]);
     }
 
     return DBusMethodErrorResponse.unknownMethod();
@@ -96,7 +102,7 @@ class DBusMenu extends DBusObject {
     return DBusStruct([
       DBusInt32(id),
       DBusDict.stringVariant(properties),
-      DBusVariant(DBusArray(DBusSignature('v'), children.map((c) => DBusVariant(c)).toList())),
+      DBusArray(DBusSignature('v'), children.map((c) => DBusVariant(c)).toList()),
     ]);
   }
 
@@ -104,7 +110,7 @@ class DBusMenu extends DBusObject {
     return DBusStruct([
       DBusInt32(id),
       DBusDict.stringVariant(item.properties),
-      DBusVariant(DBusArray(DBusSignature('v'), [])),
+      DBusArray(DBusSignature('v'), []),
     ]);
   }
 
