@@ -89,9 +89,9 @@ void main() {
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    final matcher = matches(
-        r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+'
-        r'(/org/ayatana/appindicator/test_indicator)?$');
+    final matcher =
+        matches(r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+'
+            r'(/org/ayatana/appindicator/test_indicator)?$');
 
     await waitForRegistration(watcher, matcher);
 
