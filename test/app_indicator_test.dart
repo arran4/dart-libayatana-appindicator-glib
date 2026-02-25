@@ -70,7 +70,6 @@ void main() {
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
     await Future.delayed(const Duration(milliseconds: 200));
-    await Future.delayed(const Duration(milliseconds: 200));
 
     expect(
       MockWatcher.registeredItems,
