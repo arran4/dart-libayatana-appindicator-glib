@@ -85,4 +85,40 @@ void main() {
     var stateArray = result.children[2] as DBusArray;
     expect(stateArray.children.single, DBusVariant(DBusString('on')));
   });
+
+  test('DBusActionGroup DescribeAll returns all actions', () async {
+    var group = DBusActionGroup(DBusObjectPath('/test'));
+    group.addAction(DBusAction('one'));
+    group.addAction(DBusAction('two', state: DBusString('on')));
+
+    var call = DBusMethodCall(
+      sender: 'sender',
+      interface: 'org.gtk.Actions',
+      name: 'DescribeAll',
+      values: [],
+    );
+
+    var response = await group.handleMethodCall(call);
+    expect(response, isA<DBusMethodSuccessResponse>());
+    var success = response as DBusMethodSuccessResponse;
+    var result = success.returnValues[0];
+
+    expect(result, isA<DBusDict>());
+    var dict = result as DBusDict;
+    expect(dict.children.length, 2);
+
+    expect(dict.children[DBusString('one')], isA<DBusStruct>());
+    var one = dict.children[DBusString('one')] as DBusStruct;
+    expect(one.children[0], DBusBoolean(true)); // enabled
+    expect(one.children[1], DBusSignature('')); // no state => no signature?
+    var oneStateArray = one.children[2] as DBusArray;
+    expect(oneStateArray.children, isEmpty);
+
+    expect(dict.children[DBusString('two')], isA<DBusStruct>());
+    var two = dict.children[DBusString('two')] as DBusStruct;
+    expect(two.children[0], DBusBoolean(true)); // enabled
+    expect(two.children[1], DBusSignature('s')); // string state
+    var twoStateArray = two.children[2] as DBusArray;
+    expect(twoStateArray.children.single, DBusVariant(DBusString('on')));
+  });
 }
