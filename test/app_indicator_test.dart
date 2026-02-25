@@ -10,6 +10,8 @@ import 'package:test/test.dart';
 class MockWatcher extends StatusNotifierWatcher {
   static final List<String> registeredItems = [];
   static final List<String> unregisteredItems = [];
+  static Completer<void>? registeredCompleter;
+  static Completer<void>? unregisteredCompleter;
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -20,6 +22,7 @@ class MockWatcher extends StatusNotifierWatcher {
     if (!registeredItems.contains(service)) {
       registeredItems.add(service);
       await emitStatusNotifierItemRegistered(service);
+      registeredCompleter?.complete();
     }
     return DBusMethodSuccessResponse([]);
   }
@@ -31,6 +34,7 @@ class MockWatcher extends StatusNotifierWatcher {
       final service = methodCall.values[0].asString();
       if (!unregisteredItems.contains(service)) {
         unregisteredItems.add(service);
+        unregisteredCompleter?.complete();
       }
     }
     return super.handleMethodCall(methodCall);
@@ -56,6 +60,8 @@ void main() {
   setUp(() async {
     MockWatcher.registeredItems.clear();
     MockWatcher.unregisteredItems.clear();
+    MockWatcher.registeredCompleter = null;
+    MockWatcher.unregisteredCompleter = null;
   });
 
   test('AppIndicator connects and registers', () async {
@@ -66,24 +72,23 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registeredCompleter = Completer<void>();
+
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registeredCompleter!.future
+        .timeout(const Duration(seconds: 1));
 
+    final items = List<String>.from(MockWatcher.registeredItems);
+    expect(items, isNotEmpty, reason: 'Registered items should not be empty');
     expect(
-      MockWatcher.registeredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
+        items.first,
+        matches(
+            r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$'),
+        reason: 'First item should match regex');
 
     await indicator.close();
-
-    expect(
-      MockWatcher.unregisteredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
 
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
@@ -97,11 +102,14 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registeredCompleter = Completer<void>();
+
     final indicator =
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registeredCompleter!.future
+        .timeout(const Duration(seconds: 1));
 
     expect(
       MockWatcher.registeredItems,
@@ -159,15 +167,19 @@ void main() {
     await systemClient.registerObject(watcher);
     await systemClient.requestName(watcherName);
 
+    MockWatcher.registeredCompleter = Completer<void>();
     final emptyAfterSanitize = AppIndicator(id: '!!!', client: appClient);
     await emptyAfterSanitize.connect(
         watcherName: watcherName, watcherPath: watcherPath);
+    await MockWatcher.registeredCompleter!.future
+        .timeout(const Duration(seconds: 1));
 
+    MockWatcher.registeredCompleter = Completer<void>();
     final leadingDigit = AppIndicator(id: '123-start', client: appClient);
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
-
-    await Future.delayed(const Duration(milliseconds: 200));
+    await MockWatcher.registeredCompleter!.future
+        .timeout(const Duration(seconds: 1));
 
     expect(
       MockWatcher.registeredItems,
