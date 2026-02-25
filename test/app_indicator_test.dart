@@ -76,9 +76,9 @@ void main() {
 
     // Wait for the registration signal instead of a fixed delay
     try {
-        await registeredFuture.timeout(const Duration(seconds: 2));
+      await registeredFuture.timeout(const Duration(seconds: 2));
     } catch (e) {
-        // If timeout, we still check the list for debugging info via expect
+      // If timeout, we still check the list for debugging info via expect
     }
 
     expect(
