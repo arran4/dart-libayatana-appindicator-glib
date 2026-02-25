@@ -538,8 +538,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
-        methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
+    if (methodCall.interface == StatusNotifierItem.kInterface ||
+        methodCall.interface == StatusNotifierItem.kFreedesktopInterface) {
       return super.handleMethodCall(methodCall);
     } else if (methodCall.interface == 'com.canonical.dbusmenu') {
       return menuImpl.handleMethodCall(methodCall);
@@ -605,21 +605,21 @@ class _AppIndicatorObject extends StatusNotifierItem {
   }
 
   Future<void> emitNewOverlayIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewOverlayIcon', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewOverlayIcon', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewOverlayIcon', []);
+        StatusNotifierItem.kFreedesktopInterface, 'NewOverlayIcon', []);
   }
 
   @override
   Future<void> emitNewAttentionIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewAttentionIcon', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
+        StatusNotifierItem.kFreedesktopInterface, 'NewAttentionIcon', []);
   }
 
   Future<void> emitNewAttentionMovie() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionMovie', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewAttentionMovie', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionMovie', []);
+        StatusNotifierItem.kFreedesktopInterface, 'NewAttentionMovie', []);
   }
 }

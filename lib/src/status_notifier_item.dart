@@ -4,6 +4,9 @@
 import 'package:dbus/dbus.dart';
 
 class StatusNotifierItem extends DBusObject {
+  static const kInterface = 'org.kde.StatusNotifierItem';
+  static const kFreedesktopInterface = 'org.freedesktop.StatusNotifierItem';
+
   /// Creates a new object to expose on [path].
   StatusNotifierItem(
       {DBusObjectPath path =
@@ -185,57 +188,57 @@ class StatusNotifierItem extends DBusObject {
 
   /// Emits signal org.kde.StatusNotifierItem.NewIcon
   Future<void> emitNewIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewIcon', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewIcon', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewIcon', []);
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'NewIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewIconThemePath
   Future<void> emitNewIconThemePath(String iconThemePath) async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewIconThemePath',
+    await emitSignal(StatusNotifierItem.kInterface, 'NewIconThemePath',
         [DBusString(iconThemePath)]);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewIconThemePath',
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'NewIconThemePath',
         [DBusString(iconThemePath)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewAttentionIcon
   Future<void> emitNewAttentionIcon() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewAttentionIcon', []);
     await emitSignal(
-        'org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
+        StatusNotifierItem.kFreedesktopInterface, 'NewAttentionIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewStatus
   Future<void> emitNewStatus(String status) async {
     await emitSignal(
-        'org.kde.StatusNotifierItem', 'NewStatus', [DBusString(status)]);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewStatus',
+        StatusNotifierItem.kInterface, 'NewStatus', [DBusString(status)]);
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'NewStatus',
         [DBusString(status)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.XAyatanaNewLabel
   Future<void> emitXAyatanaNewLabel(String label, String guide) async {
-    await emitSignal('org.kde.StatusNotifierItem', 'XAyatanaNewLabel',
+    await emitSignal(StatusNotifierItem.kInterface, 'XAyatanaNewLabel',
         [DBusString(label), DBusString(guide)]);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'XAyatanaNewLabel',
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'XAyatanaNewLabel',
         [DBusString(label), DBusString(guide)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewTitle
   Future<void> emitNewTitle() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewTitle', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewTitle', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewTitle', []);
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'NewTitle', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewToolTip
   Future<void> emitNewToolTip() async {
-    await emitSignal('org.kde.StatusNotifierItem', 'NewToolTip', []);
-    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewToolTip', []);
+    await emitSignal(StatusNotifierItem.kInterface, 'NewToolTip', []);
+    await emitSignal(StatusNotifierItem.kFreedesktopInterface, 'NewToolTip', []);
   }
 
   @override
   List<DBusIntrospectInterface> introspect() {
     final kdeInterface =
-        DBusIntrospectInterface('org.kde.StatusNotifierItem', methods: [
+        DBusIntrospectInterface(StatusNotifierItem.kInterface, methods: [
       DBusIntrospectMethod('Scroll', args: [
         DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
             name: 'delta'),
@@ -339,7 +342,7 @@ class StatusNotifierItem extends DBusObject {
     ]);
     return [
       kdeInterface,
-      DBusIntrospectInterface('org.freedesktop.StatusNotifierItem',
+      DBusIntrospectInterface(StatusNotifierItem.kFreedesktopInterface,
           methods: kdeInterface.methods,
           signals: kdeInterface.signals,
           properties: kdeInterface.properties)
@@ -348,8 +351,8 @@ class StatusNotifierItem extends DBusObject {
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
-        methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
+    if (methodCall.interface == StatusNotifierItem.kInterface ||
+        methodCall.interface == StatusNotifierItem.kFreedesktopInterface) {
       if (methodCall.name == 'Scroll') {
         if (methodCall.signature != DBusSignature('is')) {
           return DBusMethodErrorResponse.invalidArgs();
@@ -395,8 +398,8 @@ class StatusNotifierItem extends DBusObject {
 
   @override
   Future<DBusMethodResponse> getProperty(String interface, String name) async {
-    if (interface == 'org.kde.StatusNotifierItem' ||
-        interface == 'org.freedesktop.StatusNotifierItem') {
+    if (interface == StatusNotifierItem.kInterface ||
+        interface == StatusNotifierItem.kFreedesktopInterface) {
       if (name == 'Id') {
         return getId();
       } else if (name == 'Category') {
@@ -452,8 +455,8 @@ class StatusNotifierItem extends DBusObject {
   @override
   Future<DBusMethodResponse> setProperty(
       String interface, String name, DBusValue value) async {
-    if (interface == 'org.kde.StatusNotifierItem' ||
-        interface == 'org.freedesktop.StatusNotifierItem') {
+    if (interface == StatusNotifierItem.kInterface ||
+        interface == StatusNotifierItem.kFreedesktopInterface) {
       if (name == 'Id' ||
           name == 'Category' ||
           name == 'Status' ||
@@ -488,8 +491,8 @@ class StatusNotifierItem extends DBusObject {
   @override
   Future<DBusMethodResponse> getAllProperties(String interface) async {
     var properties = <String, DBusValue>{};
-    if (interface == 'org.kde.StatusNotifierItem' ||
-        interface == 'org.freedesktop.StatusNotifierItem') {
+    if (interface == StatusNotifierItem.kInterface ||
+        interface == StatusNotifierItem.kFreedesktopInterface) {
       properties['Id'] = (await getId()).returnValues[0];
       properties['Category'] = (await getCategory()).returnValues[0];
       properties['Status'] = (await getStatus()).returnValues[0];
