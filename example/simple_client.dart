@@ -9,7 +9,7 @@ Future<void> main() async {
 
   final indicator = AppIndicator(
     id: 'example-feature-showcase',
-    iconName: 'help-about',
+    iconName: 'example/assets/demo-indicator.png',
     category: AppIndicatorCategory.applicationStatus,
   );
 

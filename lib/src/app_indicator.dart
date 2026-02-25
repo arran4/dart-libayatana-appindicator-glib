@@ -499,6 +499,7 @@ class AppIndicator {
     await _client.requestName(_serviceName);
     _isConnected = true;
     await _flushPendingSignals();
+    await _object.emitNewIcon(); // Explicitly trigger icon fetch after connect
 
     _object.menuImpl.client = _client;
     _object.actionGroupImpl.client = _client;
@@ -529,9 +530,9 @@ class AppIndicator {
 
   Future<void> _registerWithWatcher(StatusNotifierWatcher watcher) async {
     final registrationTargets = <String>[
+      _object.path.toString(),
       _serviceName,
       '$_serviceName${_object.path}',
-      _object.path.toString(),
     ];
 
     Object? lastError;

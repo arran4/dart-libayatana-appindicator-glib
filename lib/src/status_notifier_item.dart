@@ -185,159 +185,164 @@ class StatusNotifierItem extends DBusObject {
   /// Emits signal org.kde.StatusNotifierItem.NewIcon
   Future<void> emitNewIcon() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewIcon', []);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewIconThemePath
   Future<void> emitNewIconThemePath(String iconThemePath) async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewIconThemePath',
         [DBusString(iconThemePath)]);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewIconThemePath',
+        [DBusString(iconThemePath)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewAttentionIcon
   Future<void> emitNewAttentionIcon() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewAttentionIcon', []);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewAttentionIcon', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewStatus
   Future<void> emitNewStatus(String status) async {
     await emitSignal(
         'org.kde.StatusNotifierItem', 'NewStatus', [DBusString(status)]);
+    await emitSignal(
+        'org.freedesktop.StatusNotifierItem', 'NewStatus', [DBusString(status)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.XAyatanaNewLabel
   Future<void> emitXAyatanaNewLabel(String label, String guide) async {
     await emitSignal('org.kde.StatusNotifierItem', 'XAyatanaNewLabel',
         [DBusString(label), DBusString(guide)]);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'XAyatanaNewLabel',
+        [DBusString(label), DBusString(guide)]);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewTitle
   Future<void> emitNewTitle() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewTitle', []);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewTitle', []);
   }
 
   /// Emits signal org.kde.StatusNotifierItem.NewToolTip
   Future<void> emitNewToolTip() async {
     await emitSignal('org.kde.StatusNotifierItem', 'NewToolTip', []);
+    await emitSignal('org.freedesktop.StatusNotifierItem', 'NewToolTip', []);
   }
 
   @override
   List<DBusIntrospectInterface> introspect() {
+    final kdeInterface = DBusIntrospectInterface('org.kde.StatusNotifierItem',
+        methods: [
+          DBusIntrospectMethod('Scroll', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'delta'),
+            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
+                name: 'orientation')
+          ]),
+          DBusIntrospectMethod('SecondaryActivate', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'x'),
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'y')
+          ]),
+          DBusIntrospectMethod('XAyatanaSecondaryActivate', args: [
+            DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
+                name: 'timestamp')
+          ]),
+          DBusIntrospectMethod('Activate', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'x'),
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'y')
+          ]),
+          DBusIntrospectMethod('ContextMenu', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'x'),
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'y')
+          ]),
+          DBusIntrospectMethod('XAyatanaActivate', args: [
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'x'),
+            DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
+                name: 'y'),
+            DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
+                name: 'timestamp')
+          ])
+        ],
+        signals: [
+          DBusIntrospectSignal('NewIcon'),
+          DBusIntrospectSignal('NewIconThemePath', args: [
+            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+                name: 'icon_theme_path')
+          ]),
+          DBusIntrospectSignal('NewAttentionIcon'),
+          DBusIntrospectSignal('NewStatus', args: [
+            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+                name: 'status')
+          ]),
+          DBusIntrospectSignal('XAyatanaNewLabel', args: [
+            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+                name: 'label'),
+            DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
+                name: 'guide')
+          ]),
+          DBusIntrospectSignal('NewTitle'),
+          DBusIntrospectSignal('NewToolTip')
+        ],
+        properties: [
+          DBusIntrospectProperty('Id', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Category', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Status', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('IconName', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('IconAccessibleDesc', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('AttentionIconName', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('AttentionAccessibleDesc', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Title', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('IconThemePath', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('Menu', DBusSignature('o'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('XAyatanaLabel', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('XAyatanaLabelGuide', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('XAyatanaOrderingIndex', DBusSignature('u'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('ToolTip', DBusSignature('(sa(iiay)ss)'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('WindowId', DBusSignature('u'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('ItemIsMenu', DBusSignature('b'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('IconPixmap', DBusSignature('a(iiay)'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('OverlayIconName', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('OverlayIconAccessibleDesc', DBusSignature('s'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('OverlayIconPixmap', DBusSignature('a(iiay)'),
+              access: DBusPropertyAccess.read),
+          DBusIntrospectProperty('AttentionMovieName', DBusSignature('s'),
+              access: DBusPropertyAccess.read)
+        ]);
     return [
-      DBusIntrospectInterface('org.kde.StatusNotifierItem', methods: [
-        DBusIntrospectMethod('Scroll', args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'delta'),
-          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.in_,
-              name: 'orientation')
-        ]),
-        DBusIntrospectMethod('SecondaryActivate', args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y')
-        ]),
-        DBusIntrospectMethod('XAyatanaSecondaryActivate', args: [
-          DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
-              name: 'timestamp')
-        ]),
-        DBusIntrospectMethod('Activate', args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y')
-        ]),
-        DBusIntrospectMethod('ContextMenu', args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y')
-        ]),
-        DBusIntrospectMethod('XAyatanaActivate', args: [
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'x'),
-          DBusIntrospectArgument(DBusSignature('i'), DBusArgumentDirection.in_,
-              name: 'y'),
-          DBusIntrospectArgument(DBusSignature('u'), DBusArgumentDirection.in_,
-              name: 'timestamp')
-        ])
-      ], signals: [
-        DBusIntrospectSignal('NewIcon'),
-        DBusIntrospectSignal('NewIconThemePath', args: [
-          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
-              name: 'icon_theme_path')
-        ]),
-        DBusIntrospectSignal('NewAttentionIcon'),
-        DBusIntrospectSignal('NewStatus', args: [
-          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
-              name: 'status')
-        ]),
-        DBusIntrospectSignal('XAyatanaNewLabel', args: [
-          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
-              name: 'label'),
-          DBusIntrospectArgument(DBusSignature('s'), DBusArgumentDirection.out,
-              name: 'guide')
-        ]),
-        DBusIntrospectSignal('NewTitle'),
-        DBusIntrospectSignal('NewToolTip')
-      ], properties: [
-        DBusIntrospectProperty('Id', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('Category', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('Status', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('IconName', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('IconAccessibleDesc', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('AttentionIconName', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('AttentionAccessibleDesc', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('Title', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('IconThemePath', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('Menu', DBusSignature('o'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('XAyatanaLabel', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('XAyatanaLabelGuide', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('XAyatanaOrderingIndex', DBusSignature('u'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('ToolTip', DBusSignature('(sa(iiay)ss)'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('WindowId', DBusSignature('u'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('ItemIsMenu', DBusSignature('b'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('IconPixmap', DBusSignature('a(iiay)'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('AttentionIconPixmap', DBusSignature('a(iiay)'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('OverlayIconName', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('OverlayIconAccessibleDesc', DBusSignature('s'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('OverlayIconPixmap', DBusSignature('a(iiay)'),
-            access: DBusPropertyAccess.read),
-        DBusIntrospectProperty('AttentionMovieName', DBusSignature('s'),
-            access: DBusPropertyAccess.read)
-      ]),
+      kdeInterface,
       DBusIntrospectInterface('org.freedesktop.StatusNotifierItem',
-          methods: introspect()
-              .firstWhere(
-                  (i) => i.name == 'org.kde.StatusNotifierItem')
-              .methods,
-          signals: introspect()
-              .firstWhere(
-                  (i) => i.name == 'org.kde.StatusNotifierItem')
-              .signals,
-          properties: introspect()
-              .firstWhere(
-                  (i) => i.name == 'org.kde.StatusNotifierItem')
-              .properties)
+          methods: kdeInterface.methods,
+          signals: kdeInterface.signals,
+          properties: kdeInterface.properties)
     ];
   }
 
