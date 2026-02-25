@@ -45,9 +45,9 @@ void main() {
     indicator.iconName = cwdIcon;
 
     // In current directory, parent path is current directory
-    final expectedPath = File(cwdIcon).absolute.parent.path;
 
     expect(indicator.iconThemePath, isEmpty,
-        reason: 'Simple filename without path separators should be treated as icon name');
+        reason: 'Simple filename without path separators should be '
+            'treated as icon name');
   });
 }
