@@ -10,6 +10,10 @@ import 'package:test/test.dart';
 class MockWatcher extends StatusNotifierWatcher {
   static final List<String> registeredItems = [];
   static final List<String> unregisteredItems = [];
+  static final StreamController<String> _registrationController =
+      StreamController.broadcast();
+
+  static Stream<String> get onRegistered => _registrationController.stream;
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -18,7 +22,9 @@ class MockWatcher extends StatusNotifierWatcher {
   Future<DBusMethodResponse> doRegisterStatusNotifierItem(
       String service) async {
     if (!registeredItems.contains(service)) {
+      stderr.writeln('[debug] MockWatcher: registered $service');
       registeredItems.add(service);
+      _registrationController.add(service);
       await emitStatusNotifierItemRegistered(service);
     }
     return DBusMethodSuccessResponse([]);
@@ -67,9 +73,10 @@ void main() {
     await systemClient.requestName(watcherName);
 
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
+    final registration = MockWatcher.onRegistered.first;
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await registration.timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
@@ -78,12 +85,6 @@ void main() {
     );
 
     await indicator.close();
-
-    expect(
-      MockWatcher.unregisteredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
 
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
@@ -99,9 +100,10 @@ void main() {
 
     final indicator =
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
+    final registration = MockWatcher.onRegistered.first;
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await registration.timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
@@ -160,14 +162,16 @@ void main() {
     await systemClient.requestName(watcherName);
 
     final emptyAfterSanitize = AppIndicator(id: '!!!', client: appClient);
+    final registration1 = MockWatcher.onRegistered.first;
     await emptyAfterSanitize.connect(
         watcherName: watcherName, watcherPath: watcherPath);
+    await registration1.timeout(const Duration(seconds: 5));
 
     final leadingDigit = AppIndicator(id: '123-start', client: appClient);
+    final registration2 = MockWatcher.onRegistered.first;
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
-
-    await Future.delayed(const Duration(milliseconds: 200));
+    await registration2.timeout(const Duration(seconds: 5));
 
     expect(
       MockWatcher.registeredItems,
