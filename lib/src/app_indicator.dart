@@ -541,7 +541,8 @@ class _AppIndicatorObject extends StatusNotifierItem {
     if (methodCall.interface == 'org.kde.StatusNotifierItem' ||
         methodCall.interface == 'org.freedesktop.StatusNotifierItem') {
       return super.handleMethodCall(methodCall);
-    } else if (methodCall.interface == 'com.canonical.dbusmenu') {
+    } else if (methodCall.interface == 'com.canonical.dbusmenu' ||
+        methodCall.interface == 'org.gtk.Menus') {
       return menuImpl.handleMethodCall(methodCall);
     }
     return DBusMethodErrorResponse.unknownInterface();

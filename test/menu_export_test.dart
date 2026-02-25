@@ -19,4 +19,66 @@ void main() {
     expect(menu.items.length, 2);
     expect(menu.items[1].children.length, 1);
   });
+
+  test('DBusMenu handles org.gtk.Menus.Start with invalid arguments', () async {
+    var menu = DBusMenu(const DBusObjectPath.unchecked('/test'), []);
+
+    // Call Start with signature 's' (string) instead of 'au' (array of uint32)
+    var call = DBusMethodCall(
+      sender: 'sender',
+      interface: 'org.gtk.Menus',
+      name: 'Start',
+      values: [DBusString('invalid')],
+    );
+
+    var response = await menu.handleMethodCall(call);
+    expect(response, isA<DBusMethodErrorResponse>());
+    expect(response.toString(), contains('InvalidArgs'));
+  });
+
+  test('DBusMenu handles org.gtk.Menus.End with invalid arguments', () async {
+    var menu = DBusMenu(const DBusObjectPath.unchecked('/test'), []);
+
+    // Call End with signature 's' (string) instead of 'au' (array of uint32)
+    var call = DBusMethodCall(
+      sender: 'sender',
+      interface: 'org.gtk.Menus',
+      name: 'End',
+      values: [DBusString('invalid')],
+    );
+
+    var response = await menu.handleMethodCall(call);
+    expect(response, isA<DBusMethodErrorResponse>());
+    expect(response.toString(), contains('InvalidArgs'));
+  });
+
+  test('DBusMenu handles org.gtk.Menus.Start with valid arguments', () async {
+    var menu = DBusMenu(const DBusObjectPath.unchecked('/test'), []);
+
+    // Call Start with signature 'au'
+    var call = DBusMethodCall(
+      sender: 'sender',
+      interface: 'org.gtk.Menus',
+      name: 'Start',
+      values: [DBusArray(DBusSignature('u'), [])],
+    );
+
+    var response = await menu.handleMethodCall(call);
+    expect(response, isA<DBusMethodSuccessResponse>());
+  });
+
+  test('DBusMenu handles org.gtk.Menus.End with valid arguments', () async {
+    var menu = DBusMenu(const DBusObjectPath.unchecked('/test'), []);
+
+    // Call End with signature 'au'
+    var call = DBusMethodCall(
+      sender: 'sender',
+      interface: 'org.gtk.Menus',
+      name: 'End',
+      values: [DBusArray(DBusSignature('u'), [])],
+    );
+
+    var response = await menu.handleMethodCall(call);
+    expect(response, isA<DBusMethodSuccessResponse>());
+  });
 }

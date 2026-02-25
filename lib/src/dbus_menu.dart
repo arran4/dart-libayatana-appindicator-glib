@@ -92,32 +92,69 @@ class DBusMenu extends DBusObject {
           DBusIntrospectProperty('Status', DBusSignature('s'),
               access: DBusPropertyAccess.read),
         ],
-      )
+      ),
+      DBusIntrospectInterface(
+        'org.gtk.Menus',
+        methods: [
+          DBusIntrospectMethod('Start', args: [
+            DBusIntrospectArgument(
+                DBusSignature('au'), DBusArgumentDirection.in_,
+                name: 'ids'),
+            DBusIntrospectArgument(
+                DBusSignature('a(ua{sv})'), DBusArgumentDirection.out,
+                name: 'content'),
+          ]),
+          DBusIntrospectMethod('End', args: [
+            DBusIntrospectArgument(
+                DBusSignature('au'), DBusArgumentDirection.in_,
+                name: 'ids'),
+          ]),
+        ],
+        signals: [
+          DBusIntrospectSignal('Changed', args: [
+            DBusIntrospectArgument(
+                DBusSignature('a(ua{sv})'), DBusArgumentDirection.out,
+                name: 'changes'),
+          ]),
+        ],
+      ),
     ];
   }
 
   @override
   Future<DBusMethodResponse> handleMethodCall(DBusMethodCall methodCall) async {
-    if (methodCall.interface != 'com.canonical.dbusmenu') {
-      return DBusMethodErrorResponse.unknownInterface();
+    if (methodCall.interface == 'com.canonical.dbusmenu') {
+      if (methodCall.name == 'GetLayout') {
+        final parentId = methodCall.values[0].asInt32();
+        final recursionDepth = methodCall.values[1].asInt32();
+        return _getLayout(parentId, recursionDepth);
+      } else if (methodCall.name == 'Event') {
+        final id = methodCall.values[0].asInt32();
+        final eventId = methodCall.values[1].asString();
+        return _handleEvent(id, eventId);
+      } else if (methodCall.name == 'GetGroupProperties') {
+        return DBusMethodSuccessResponse(
+            [DBusArray(DBusSignature('(ia{sv})'), [])]);
+      } else if (methodCall.name == 'AboutToShow') {
+        return DBusMethodSuccessResponse([DBusBoolean(false)]);
+      }
+      return DBusMethodErrorResponse.unknownMethod();
+    } else if (methodCall.interface == 'org.gtk.Menus') {
+      if (methodCall.name == 'Start') {
+        if (methodCall.signature != DBusSignature('au')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return _handleStart(methodCall.values);
+      } else if (methodCall.name == 'End') {
+        if (methodCall.signature != DBusSignature('au')) {
+          return DBusMethodErrorResponse.invalidArgs();
+        }
+        return _handleEnd(methodCall.values);
+      }
+      return DBusMethodErrorResponse.unknownMethod();
     }
 
-    if (methodCall.name == 'GetLayout') {
-      final parentId = methodCall.values[0].asInt32();
-      final recursionDepth = methodCall.values[1].asInt32();
-      return _getLayout(parentId, recursionDepth);
-    } else if (methodCall.name == 'Event') {
-      final id = methodCall.values[0].asInt32();
-      final eventId = methodCall.values[1].asString();
-      return _handleEvent(id, eventId);
-    } else if (methodCall.name == 'GetGroupProperties') {
-      return DBusMethodSuccessResponse(
-          [DBusArray(DBusSignature('(ia{sv})'), [])]);
-    } else if (methodCall.name == 'AboutToShow') {
-      return DBusMethodSuccessResponse([DBusBoolean(false)]);
-    }
-
-    return DBusMethodErrorResponse.unknownMethod();
+    return DBusMethodErrorResponse.unknownInterface();
   }
 
   @override
@@ -169,6 +206,16 @@ class DBusMenu extends DBusObject {
       final item = _findItemById(_rootItems, id);
       item?.onActivated?.call();
     }
+    return DBusMethodSuccessResponse([]);
+  }
+
+  Future<DBusMethodResponse> _handleStart(List<DBusValue> values) async {
+    // Return empty content for now
+    return DBusMethodSuccessResponse(
+        [DBusArray(DBusSignature('(ua{sv})'), [])]);
+  }
+
+  Future<DBusMethodResponse> _handleEnd(List<DBusValue> values) async {
     return DBusMethodSuccessResponse([]);
   }
 
