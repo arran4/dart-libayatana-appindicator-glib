@@ -211,7 +211,9 @@ class AppIndicator {
       try {
         await _registerWithWatcher(watcher);
         return;
-      } catch (_) {
+      } catch (e) {
+        stderr.writeln(
+            '[warn] AppIndicator: Failed to register with ${watcher.name}: $e');
         // Fallback to next watcher
       }
     }
@@ -252,7 +254,10 @@ class AppIndicator {
     _client.unregisterObject(_object);
     try {
       await _client.releaseName(_serviceName);
-    } catch (_) {}
+    } catch (e) {
+      stderr.writeln(
+          '[warn] AppIndicator: Failed to release name $_serviceName: $e');
+    }
 
     if (_ownsClient) {
       await _client.close();
@@ -458,7 +463,9 @@ class AppIndicator {
         values: [DBusString('org.kde.StatusNotifierWatcher')],
       );
       return response.values.first.asBoolean();
-    } catch (_) {
+    } catch (e) {
+      stderr.writeln(
+          '[warn] AppIndicator: Failed to check host registration: $e');
       return false;
     }
   }
