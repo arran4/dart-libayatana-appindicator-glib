@@ -43,3 +43,11 @@ extension AppIndicatorStatusExtension on AppIndicatorStatus {
     }
   }
 }
+
+/// The protocol/backend to use for the indicator.
+enum AppIndicatorProtocol {
+  gtk,
+  dbusMenu,
+  statusNotifier,
+  appMenu,
+}

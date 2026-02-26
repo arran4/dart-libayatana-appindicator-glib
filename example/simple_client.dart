@@ -3,13 +3,25 @@ import 'dart:io';
 
 import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   void log(String message) => stdout.writeln('[showcase] $message');
+
+  var protocol = AppIndicatorProtocol.gtk;
+  if (args.isNotEmpty) {
+    try {
+      protocol = AppIndicatorProtocol.values.firstWhere((e) => e.name == args[0]);
+      log('Using protocol: ${protocol.name}');
+    } catch (e) {
+      log('Unknown protocol: ${args[0]}. Using default: ${protocol.name}');
+      log('Available protocols: ${AppIndicatorProtocol.values.map((e) => e.name).join(', ')}');
+    }
+  }
 
   final indicator = AppIndicator(
     id: 'example-feature-showcase',
     iconName: 'example/assets/demo-indicator.png',
     category: AppIndicatorCategory.applicationStatus,
+    protocol: protocol,
   );
 
   log('Indicator created with ID: ${indicator.id}');
@@ -74,7 +86,9 @@ Future<void> main() async {
   await indicator.connect();
   log('Connected to D-Bus and registered with watcher.');
 
-  if (!indicator.isWatcherAvailable) {
+  if (!indicator.isWatcherAvailable &&
+      (protocol == AppIndicatorProtocol.gtk ||
+          protocol == AppIndicatorProtocol.statusNotifier)) {
     log('No StatusNotifierWatcher is available on session bus.');
   }
 
