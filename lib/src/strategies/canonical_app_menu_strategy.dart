@@ -114,7 +114,7 @@ class CanonicalAppMenuStrategy implements IndicatorStrategy {
 
     // Unregister old window if connected
     if (_isConnected && _windowId > 0) {
-       try {
+      try {
         await _client.callMethod(
           destination: 'com.canonical.AppMenu.Registrar',
           path: DBusObjectPath('/com/canonical/AppMenu/Registrar'),
@@ -198,7 +198,8 @@ class CanonicalAppMenuStrategy implements IndicatorStrategy {
   @override
   set onContextMenu(void Function(int x, int y)? callback) {}
   @override
-  set onXAyatanaActivate(void Function(int x, int y, int timestamp)? callback) {}
+  set onXAyatanaActivate(
+      void Function(int x, int y, int timestamp)? callback) {}
 
   @override
   Future<void> dispatchActivate({int x = 0, int y = 0}) async {}

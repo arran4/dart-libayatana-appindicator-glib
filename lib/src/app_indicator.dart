@@ -172,9 +172,9 @@ class AppIndicator {
     } else if (_manualIconThemePath.isNotEmpty) {
       _strategy.updateIconThemePath(_manualIconThemePath);
     } else {
-       // Should we clear it? Original code didn't clear explicitly unless overwritten.
-       // But if we switched from path-icon to name-icon, we might want to revert to empty or manual.
-       _strategy.updateIconThemePath('');
+      // Should we clear it? Original code didn't clear explicitly unless overwritten.
+      // But if we switched from path-icon to name-icon, we might want to revert to empty or manual.
+      _strategy.updateIconThemePath('');
     }
   }
 

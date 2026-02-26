@@ -142,7 +142,8 @@ class DBusMenuStrategy implements IndicatorStrategy {
   @override
   set onContextMenu(void Function(int x, int y)? callback) {}
   @override
-  set onXAyatanaActivate(void Function(int x, int y, int timestamp)? callback) {}
+  set onXAyatanaActivate(
+      void Function(int x, int y, int timestamp)? callback) {}
 
   // Testing helpers
   @override

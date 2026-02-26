@@ -97,7 +97,8 @@ class StatusNotifierStrategy implements IndicatorStrategy {
         await _registerWithWatcher(watcher);
         return;
       } catch (e) {
-        stderr.writeln('[warn] StatusNotifierStrategy: Failed to register with watcher ${watcher.name}: $e');
+        stderr.writeln(
+            '[warn] StatusNotifierStrategy: Failed to register with watcher ${watcher.name}: $e');
       }
     }
   }

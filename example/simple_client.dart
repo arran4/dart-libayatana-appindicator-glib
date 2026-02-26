@@ -9,7 +9,8 @@ Future<void> main(List<String> args) async {
   var protocol = AppIndicatorProtocol.gtk;
   if (args.isNotEmpty) {
     try {
-      protocol = AppIndicatorProtocol.values.firstWhere((e) => e.name == args[0]);
+      protocol =
+          AppIndicatorProtocol.values.firstWhere((e) => e.name == args[0]);
       log('Using protocol: ${protocol.name}');
     } catch (e) {
       log('Unknown protocol: ${args[0]}. Using default: ${protocol.name}');
