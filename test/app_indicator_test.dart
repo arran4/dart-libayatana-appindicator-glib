@@ -8,8 +8,8 @@ import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
-  static final List<String> registeredItems = [];
-  static final List<String> unregisteredItems = [];
+  final List<String> registeredItems = [];
+  final List<String> unregisteredItems = [];
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -54,8 +54,7 @@ void main() {
   });
 
   setUp(() async {
-    MockWatcher.registeredItems.clear();
-    MockWatcher.unregisteredItems.clear();
+    // No static state to clear
   });
 
   test('AppIndicator connects and registers', () async {
@@ -69,10 +68,14 @@ void main() {
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.isNotEmpty) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
@@ -80,7 +83,7 @@ void main() {
     await indicator.close();
 
     expect(
-      MockWatcher.unregisteredItems,
+      watcher.unregisteredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
@@ -101,10 +104,14 @@ void main() {
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.isNotEmpty) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
     );
@@ -167,15 +174,19 @@ void main() {
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.length >= 2) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')),
     );
     expect(
-      MockWatcher.registeredItems,
+      watcher.registeredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
     );
