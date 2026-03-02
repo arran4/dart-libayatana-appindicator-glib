@@ -276,7 +276,8 @@ void main() {
           'Failed to find registered event-indicator. Actual items: ${watcher.registeredItems}');
     }
 
-    final objectPath = DBusObjectPath('/org/ayatana/appindicator/event_indicator');
+    final objectPath =
+        DBusObjectPath('/org/ayatana/appindicator/event_indicator');
 
     await systemClient.callMethod(
       destination: serviceName,
