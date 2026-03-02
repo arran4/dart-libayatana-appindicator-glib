@@ -79,13 +79,11 @@ void main() {
 
     await indicator.close();
 
-    // Expectation removed: AppIndicator currently relies on NameOwnerChanged signal (via name release)
-    // rather than explicit UnregisterStatusNotifierItem call.
-    // expect(
-    //   MockWatcher.unregisteredItems,
-    //   contains(matches(
-    //       r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    // );
+    expect(
+      MockWatcher.unregisteredItems,
+      contains(matches(
+          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
+    );
 
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
