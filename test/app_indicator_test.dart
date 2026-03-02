@@ -68,14 +68,6 @@ void main() {
       throw 'Failed to request name $watcherName: $reply';
     }
 
-    final sub = systemClient.nameOwnerChanged.listen((event) {
-      if (event.newOwner == null || event.newOwner!.isEmpty) {
-        if (!watcher.unregisteredItems.contains(event.name)) {
-          watcher.unregisteredItems.add(event.name);
-        }
-      }
-    });
-
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
@@ -101,21 +93,12 @@ void main() {
 
     await indicator.close();
 
-    // Poll for unregistration
-    for (var i = 0; i < 20; i++) {
-      if (watcher.unregisteredItems.any((item) => RegExp(
-              r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')
-          .hasMatch(item))) break;
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
     expect(
       watcher.unregisteredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
 
-    await sub.cancel();
     await systemClient.releaseName(watcherName);
     systemClient.unregisterObject(watcher);
   });
