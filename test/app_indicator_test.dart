@@ -231,6 +231,13 @@ void main() {
   });
 
   test('AppIndicator dispatch emits interaction events', () async {
+    const watcherName = 'org.kde.StatusNotifierWatcher.EventTest';
+    const watcherPath = '/StatusNotifierWatcher/EventTest';
+
+    final watcher = MockWatcher(path: watcherPath);
+    await systemClient.registerObject(watcher);
+    await systemClient.requestName(watcherName);
+
     final indicator = AppIndicator(id: 'event-indicator', client: appClient);
 
     final activate = Completer<ActivateEvent>();
@@ -245,10 +252,60 @@ void main() {
       indicator.scrollEvents.listen(scroll.complete),
     ];
 
-    await indicator.dispatchActivate(x: 10, y: 11);
-    await indicator.dispatchSecondaryActivate(x: 12, y: 13);
-    await indicator.dispatchContextMenu(x: 14, y: 15);
-    await indicator.dispatchScroll(delta: 3, orientation: 'vertical');
+    await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
+
+    // Poll for registration to get the dynamically generated service name
+    String? serviceName;
+    for (var i = 0; i < 20; i++) {
+      final match = watcher.registeredItems.cast<String?>().firstWhere(
+            (item) =>
+                item != null &&
+                RegExp(r'^org\.ayatana\.appindicator\.event_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/event_indicator)?$')
+                    .hasMatch(item),
+            orElse: () => null,
+          );
+      if (match != null) {
+        serviceName = match.split('/')[0];
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (serviceName == null) {
+      throw Exception(
+          'Failed to find registered event-indicator. Actual items: ${watcher.registeredItems}');
+    }
+
+    final objectPath = DBusObjectPath('/org/ayatana/appindicator/event_indicator');
+
+    await systemClient.callMethod(
+      destination: serviceName,
+      path: objectPath,
+      interface: 'org.kde.StatusNotifierItem',
+      name: 'Activate',
+      values: [DBusInt32(10), DBusInt32(11)],
+    );
+    await systemClient.callMethod(
+      destination: serviceName,
+      path: objectPath,
+      interface: 'org.kde.StatusNotifierItem',
+      name: 'SecondaryActivate',
+      values: [DBusInt32(12), DBusInt32(13)],
+    );
+    await systemClient.callMethod(
+      destination: serviceName,
+      path: objectPath,
+      interface: 'org.kde.StatusNotifierItem',
+      name: 'ContextMenu',
+      values: [DBusInt32(14), DBusInt32(15)],
+    );
+    await systemClient.callMethod(
+      destination: serviceName,
+      path: objectPath,
+      interface: 'org.kde.StatusNotifierItem',
+      name: 'Scroll',
+      values: [DBusInt32(3), DBusString('vertical')],
+    );
 
     expect((await activate.future).x, 10);
     expect((await secondary.future).y, 13);
@@ -259,6 +316,8 @@ void main() {
       await subscription.cancel();
     }
     await indicator.close();
+    await systemClient.releaseName(watcherName);
+    systemClient.unregisterObject(watcher);
   });
 
   test('AppIndicator exposes icon pixmap related properties', () async {
