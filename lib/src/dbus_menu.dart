@@ -2,9 +2,12 @@ import 'package:dbus/dbus.dart';
 
 class DBusMenu extends DBusObject {
   final List<DBusMenuItem> _rootItems;
+  final Map<int, List<DBusMenuItem>> _menus = {};
   int _revision = 1;
 
-  DBusMenu(DBusObjectPath path, this._rootItems) : super(path);
+  DBusMenu(DBusObjectPath path, this._rootItems) : super(path) {
+    _rebuildMenus();
+  }
 
   List<DBusMenuItem> get items => _rootItems;
 
@@ -185,8 +188,58 @@ class DBusMenu extends DBusObject {
     _rootItems.clear();
     _rootItems.addAll(items);
     _revision++;
+    _rebuildMenus();
     emitSignal('com.canonical.dbusmenu', 'LayoutUpdated',
         [DBusUint32(_revision), DBusInt32(0)]);
+  }
+
+  void _rebuildMenus() {
+    _menus.clear();
+    _menus[0] = _rootItems;
+    for (var item in _rootItems) {
+      _registerItem(item);
+    }
+  }
+
+  void _registerItem(DBusMenuItem item) {
+    _menus[item.id] = item.children;
+    for (var child in item.children) {
+      _registerItem(child);
+    }
+  }
+
+  void updateMenuItems(int id,
+      {required int position,
+      int removeCount = 0,
+      List<DBusMenuItem> items = const <DBusMenuItem>[]}) {
+    var menuItems = _menus[id];
+    if (menuItems == null) {
+      throw ArgumentError('Menu group $id does not exist');
+    }
+
+    if (position < 0 || position > menuItems.length) {
+      throw RangeError.range(position, 0, menuItems.length, 'position');
+    }
+
+    if (removeCount < 0 || removeCount > menuItems.length - position) {
+      throw RangeError.range(
+          removeCount, 0, menuItems.length - position, 'removeCount');
+    }
+
+    menuItems.replaceRange(position, position + removeCount, items);
+
+    for (var item in items) {
+      _registerItem(item);
+    }
+
+    _emitMenuChanged(id, position, removeCount, items);
+  }
+
+  void _emitMenuChanged(
+      int id, int position, int removeCount, List<DBusMenuItem> items) {
+    _revision++;
+    emitSignal('com.canonical.dbusmenu', 'LayoutUpdated',
+        [DBusUint32(_revision), DBusInt32(id)]);
   }
 }
 

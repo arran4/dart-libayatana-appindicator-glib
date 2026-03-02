@@ -62,6 +62,14 @@ class DBusActionGroup extends DBusObject {
             .unknownMethod(); // Or a more specific error
       }
       return DBusMethodSuccessResponse([action.toDescription()]);
+    } else if (methodCall.name == 'DescribeAll') {
+      var descriptions = <DBusValue, DBusValue>{};
+      for (var action in _actions.values) {
+        descriptions[DBusString(action.name)] = action.toDescription();
+      }
+      return DBusMethodSuccessResponse([
+        DBusDict(DBusSignature('s'), DBusSignature('(bgav)'), descriptions)
+      ]);
     } else if (methodCall.name == 'Activate') {
       final name = methodCall.values[0].asString();
       final parameter = methodCall.values[1] as DBusArray;
@@ -96,12 +104,9 @@ class DBusAction {
   }
 
   DBusValue toDescription() {
-    final sigStr = _state?.signature.toString() ?? '';
-    final match = RegExp(r"DBusSignature\('(.+)'\)").firstMatch(sigStr);
-    final sig = match?.group(1) ?? '';
     return DBusStruct([
       DBusBoolean(_enabled),
-      DBusSignature(sig),
+      DBusSignature(_state?.signature.value ?? ''),
       DBusArray(
           DBusSignature('v'), _state != null ? [DBusVariant(_state!)] : []),
     ]);
