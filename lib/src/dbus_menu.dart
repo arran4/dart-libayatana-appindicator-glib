@@ -139,49 +139,32 @@ class DBusMenu extends DBusObject {
 
   Future<DBusMethodResponse> _getLayout(
       int parentId, int recursionDepth) async {
-    final layout = _buildLayout(parentId, recursionDepth);
+    final layout = _buildLayout(0);
     return DBusMethodSuccessResponse([DBusUint32(_revision), layout]);
   }
 
-  DBusValue _buildLayout(int id, int recursionDepth) {
+  DBusValue _buildLayout(int id) {
     var properties = <String, DBusValue>{};
-    var childrenVariants = <DBusVariant>[];
+    var children = <DBusValue>[];
 
     if (id == 0) {
-      if (recursionDepth != 0) {
-        int nextDepth = recursionDepth == -1 ? -1 : recursionDepth - 1;
-        childrenVariants = _rootItems
-            .map((item) => DBusVariant(_buildItem(item, nextDepth)))
-            .toList();
-      }
-    } else {
-      var item = _itemCache[id];
-      if (item != null) {
-        return _buildItem(item, recursionDepth);
-      }
+      children = _rootItems.map((item) => _buildItem(item)).toList();
     }
 
     return DBusStruct([
       DBusInt32(id),
       DBusDict.stringVariant(properties),
-      DBusArray(DBusSignature('v'), childrenVariants),
+      DBusArray(
+          DBusSignature('v'), children.map((c) => DBusVariant(c)).toList()),
     ]);
   }
 
-  DBusValue _buildItem(DBusMenuItem item, int recursionDepth) {
-    var childrenVariants = <DBusVariant>[];
-
-    if (recursionDepth != 0) {
-      int nextDepth = recursionDepth == -1 ? -1 : recursionDepth - 1;
-      childrenVariants = item.children
-          .map((c) => DBusVariant(_buildItem(c, nextDepth)))
-          .toList();
-    }
-
+  DBusValue _buildItem(DBusMenuItem item) {
     return DBusStruct([
       DBusInt32(item.id),
       DBusDict.stringVariant(item.properties),
-      DBusArray(DBusSignature('v'), childrenVariants),
+      DBusArray(DBusSignature('v'),
+          item.children.map((c) => DBusVariant(_buildItem(c))).toList()),
     ]);
   }
 
