@@ -160,10 +160,10 @@ class AppIndicator {
     };
   }
 
-  static final _cleanIdInvalid = RegExp(r'[^a-zA-Z0-9_]');
-  static final _cleanIdCollapse = RegExp(r'_+');
-  static final _cleanIdTrim = RegExp(r'^_+|_+$');
-  static final _startsWithDigitRegExp = RegExp(r'[0-9]');
+  static late final _cleanIdInvalid = RegExp(r'[^a-zA-Z0-9_]');
+  static late final _cleanIdCollapse = RegExp(r'_+');
+  static late final _cleanIdTrim = RegExp(r'^_+|_+$');
+  static late final _startsWithDigitRegExp = RegExp(r'[0-9]');
 
   static String _cleanId(String id) {
     var sanitized = id.replaceAll(_cleanIdInvalid, '_');
