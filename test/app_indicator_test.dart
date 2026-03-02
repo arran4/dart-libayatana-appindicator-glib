@@ -232,6 +232,8 @@ void main() {
 
   test('AppIndicator dispatch emits interaction events', () async {
     final indicator = AppIndicator(id: 'event-indicator', client: appClient);
+    await indicator.connect(
+        watcherName: 'org.kde.StatusNotifierWatcher.NonExistent');
 
     final activate = Completer<ActivateEvent>();
     final secondary = Completer<SecondaryActivateEvent>();
@@ -245,10 +247,40 @@ void main() {
       indicator.scrollEvents.listen(scroll.complete),
     ];
 
-    await indicator.dispatchActivate(x: 10, y: 11);
-    await indicator.dispatchSecondaryActivate(x: 12, y: 13);
-    await indicator.dispatchContextMenu(x: 14, y: 15);
-    await indicator.dispatchScroll(delta: 3, orientation: 'vertical');
+    final path = DBusObjectPath('/org/ayatana/appindicator/event_indicator');
+    final interface = 'org.kde.StatusNotifierItem';
+
+    await appClient.callMethod(
+      destination: appClient.uniqueName,
+      path: path,
+      interface: interface,
+      name: 'Activate',
+      values: [DBusInt32(10), DBusInt32(11)],
+    );
+
+    await appClient.callMethod(
+      destination: appClient.uniqueName,
+      path: path,
+      interface: interface,
+      name: 'SecondaryActivate',
+      values: [DBusInt32(12), DBusInt32(13)],
+    );
+
+    await appClient.callMethod(
+      destination: appClient.uniqueName,
+      path: path,
+      interface: interface,
+      name: 'ContextMenu',
+      values: [DBusInt32(14), DBusInt32(15)],
+    );
+
+    await appClient.callMethod(
+      destination: appClient.uniqueName,
+      path: path,
+      interface: interface,
+      name: 'Scroll',
+      values: [DBusInt32(3), DBusString('vertical')],
+    );
 
     expect((await activate.future).x, 10);
     expect((await secondary.future).y, 13);
