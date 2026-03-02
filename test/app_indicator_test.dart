@@ -8,8 +8,8 @@ import 'package:dbus/dbus.dart';
 import 'package:test/test.dart';
 
 class MockWatcher extends StatusNotifierWatcher {
-  static final List<String> registeredItems = [];
-  static final List<String> unregisteredItems = [];
+  final List<String> registeredItems = [];
+  final List<String> unregisteredItems = [];
 
   MockWatcher({String path = '/StatusNotifierWatcher'})
       : super(path: DBusObjectPath(path));
@@ -54,8 +54,7 @@ void main() {
   });
 
   setUp(() async {
-    MockWatcher.registeredItems.clear();
-    MockWatcher.unregisteredItems.clear();
+    // No static state to clear
   });
 
   test('AppIndicator connects and registers', () async {
@@ -64,23 +63,38 @@ void main() {
 
     final watcher = MockWatcher(path: watcherPath);
     await systemClient.registerObject(watcher);
-    await systemClient.requestName(watcherName);
+    var reply = await systemClient.requestName(watcherName);
+    if (reply != DBusRequestNameReply.primaryOwner) {
+      throw 'Failed to request name $watcherName: $reply';
+    }
 
     final indicator = AppIndicator(id: 'test-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.isNotEmpty) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
-    expect(
-      MockWatcher.registeredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
-    );
+    if (watcher.registeredItems.isEmpty) {
+      throw Exception(
+          'Registered items is empty! Actual: ${watcher.registeredItems}');
+    }
+
+    final found = watcher.registeredItems.any((item) => RegExp(
+            r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')
+        .hasMatch(item));
+
+    if (!found) {
+      throw Exception(
+          'Registered items did not contain match. Actual: ${watcher.registeredItems}');
+    }
 
     await indicator.close();
 
     expect(
-      MockWatcher.unregisteredItems,
+      watcher.unregisteredItems,
       contains(matches(
           r'^org\.ayatana\.appindicator\.test_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/test_indicator)?$')),
     );
@@ -101,13 +115,19 @@ void main() {
         AppIndicator(id: 'freedesktop-indicator', client: appClient);
     await indicator.connect(watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.isNotEmpty) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
-    expect(
-      MockWatcher.registeredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')),
-    );
+    final found = watcher.registeredItems.any((item) => RegExp(
+            r'^org\.ayatana\.appindicator\.freedesktop_indicator\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/freedesktop_indicator)?$')
+        .hasMatch(item));
+
+    expect(found, isTrue,
+        reason:
+            'Registered items should contain match. Actual: ${watcher.registeredItems}');
 
     await indicator.close();
     await systemClient.releaseName(watcherName);
@@ -167,18 +187,25 @@ void main() {
     await leadingDigit.connect(
         watcherName: watcherName, watcherPath: watcherPath);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Poll for registration
+    for (var i = 0; i < 20; i++) {
+      if (watcher.registeredItems.length >= 2) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
 
-    expect(
-      MockWatcher.registeredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')),
-    );
-    expect(
-      MockWatcher.registeredItems,
-      contains(matches(
-          r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')),
-    );
+    final found1 = watcher.registeredItems.any((item) => RegExp(
+            r'^org\.ayatana\.appindicator\.indicator_6dd07555\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_6dd07555)?$')
+        .hasMatch(item));
+    final found2 = watcher.registeredItems.any((item) => RegExp(
+            r'^org\.ayatana\.appindicator\.indicator_123_start\.p[0-9]+\.v[0-9]+(/org/ayatana/appindicator/indicator_123_start)?$')
+        .hasMatch(item));
+
+    expect(found1, isTrue,
+        reason:
+            'Registered items should contain first match. Actual: ${watcher.registeredItems}');
+    expect(found2, isTrue,
+        reason:
+            'Registered items should contain second match. Actual: ${watcher.registeredItems}');
 
     await emptyAfterSanitize.close();
     await leadingDigit.close();
