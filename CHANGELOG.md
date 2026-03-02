@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Various updates and fixes.
+
 ## 0.1.6
 
 - Various updates and fixes.
