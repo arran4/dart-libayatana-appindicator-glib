@@ -3,6 +3,7 @@ import 'package:dbus/dbus.dart';
 class DBusMenu extends DBusObject {
   final List<DBusMenuItem> _rootItems;
   final Map<int, List<DBusMenuItem>> _menus = {};
+  final Map<int, DBusMenuItem> _itemCache = {};
   int _revision = 1;
 
   DBusMenu(DBusObjectPath path, this._rootItems) : super(path) {
@@ -169,19 +170,10 @@ class DBusMenu extends DBusObject {
 
   Future<DBusMethodResponse> _handleEvent(int id, String eventId) async {
     if (eventId == 'clicked') {
-      final item = _findItemById(_rootItems, id);
+      final item = _itemCache[id];
       item?.onActivated?.call();
     }
     return DBusMethodSuccessResponse([]);
-  }
-
-  DBusMenuItem? _findItemById(List<DBusMenuItem> items, int id) {
-    for (final item in items) {
-      if (item.id == id) return item;
-      final found = _findItemById(item.children, id);
-      if (found != null) return found;
-    }
-    return null;
   }
 
   void updateItems(List<DBusMenuItem> items) {
@@ -195,6 +187,7 @@ class DBusMenu extends DBusObject {
 
   void _rebuildMenus() {
     _menus.clear();
+    _itemCache.clear();
     _menus[0] = _rootItems;
     for (var item in _rootItems) {
       _registerItem(item);
@@ -203,6 +196,7 @@ class DBusMenu extends DBusObject {
 
   void _registerItem(DBusMenuItem item) {
     _menus[item.id] = item.children;
+    _itemCache[item.id] = item;
     for (var child in item.children) {
       _registerItem(child);
     }
