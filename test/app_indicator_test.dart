@@ -239,8 +239,6 @@ void main() {
     await systemClient.requestName(watcherName);
 
     final indicator = AppIndicator(id: 'event-indicator', client: appClient);
-    await indicator.connect(
-        watcherName: 'org.kde.StatusNotifierWatcher.NonExistent');
 
     final activate = Completer<ActivateEvent>();
     final secondary = Completer<SecondaryActivateEvent>();
