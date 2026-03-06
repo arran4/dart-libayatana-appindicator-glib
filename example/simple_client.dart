@@ -74,15 +74,17 @@ Future<void> main(List<String> args) async {
   ]);
 
   // Set up event callbacks (Simplified API)
-  indicator.onActivate = (x, y) => log('Primary activation @($x, $y)');
-  indicator.onSecondaryActivate =
-      (x, y) => log('Secondary activation @($x, $y)');
-  indicator.onContextMenu = (x, y) => log('Context menu @($x, $y)');
-  indicator.onScroll = (delta, orientation) {
-    log('Scroll event: delta=$delta, orientation=$orientation');
-    percentage = (percentage + delta).clamp(0, 100);
+  indicator.activateEvents
+      .listen((event) => log('Primary activation @(${event.x}, ${event.y})'));
+  indicator.secondaryActivateEvents
+      .listen((event) => log('Secondary activation @(${event.x}, ${event.y})'));
+  indicator.contextMenuEvents
+      .listen((event) => log('Context menu @(${event.x}, ${event.y})'));
+  indicator.scrollEvents.listen((event) {
+    log('Scroll event: delta=${event.delta}, orientation=${event.orientation}');
+    percentage = (percentage + event.delta).clamp(0, 100);
     updateLabel();
-  };
+  });
 
   await indicator.connect();
   log('Connected to D-Bus and registered with watcher.');
