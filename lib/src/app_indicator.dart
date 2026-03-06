@@ -51,12 +51,6 @@ class AppIndicator {
   final _xAyatanaActivateController =
       StreamController<XAyatanaActivateEvent>.broadcast();
 
-  // Callbacks
-  void Function(int x, int y)? onActivate;
-  void Function(int x, int y)? onSecondaryActivate;
-  void Function(int x, int y)? onContextMenu;
-  void Function(int delta, String orientation)? onScroll;
-
   AppIndicator({
     required this.id,
     String iconName = '',
@@ -95,32 +89,26 @@ class AppIndicator {
 
   void _setupStrategyEvents() {
     _strategy.onScroll = (delta, orientation) {
-      onScroll?.call(delta, orientation);
       _scrollController.add(ScrollEvent(delta, orientation));
     };
 
     _strategy.onSecondaryActivate = (x, y) {
-      onSecondaryActivate?.call(x, y);
       _secondaryActivateController.add(SecondaryActivateEvent(x, y));
     };
 
     _strategy.onXAyatanaSecondaryActivate = (timestamp) {
-      onSecondaryActivate?.call(0, 0);
       _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
     };
 
     _strategy.onActivate = (x, y) {
-      onActivate?.call(x, y);
       _activateController.add(ActivateEvent(x, y));
     };
 
     _strategy.onContextMenu = (x, y) {
-      onContextMenu?.call(x, y);
       _contextMenuController.add(ContextMenuEvent(x, y));
     };
 
     _strategy.onXAyatanaActivate = (x, y, timestamp) {
-      onActivate?.call(x, y);
       _xAyatanaActivateController.add(XAyatanaActivateEvent(x, y, timestamp));
     };
   }

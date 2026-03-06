@@ -72,17 +72,17 @@ import 'package:dart_libayatana_appindicator/dart_libayatana_appindicator.dart';
 ### Handling Events
 
 ```dart
-  indicator.onActivate = (x, y) {
-    print('Primary click at $x, $y');
-  };
+  indicator.activateEvents.listen((event) {
+    print('Primary click at ${event.x}, ${event.y}');
+  });
 
-  indicator.onSecondaryActivate = (x, y) {
-    print('Secondary click at $x, $y');
-  };
+  indicator.secondaryActivateEvents.listen((event) {
+    print('Secondary click at ${event.x}, ${event.y}');
+  });
 
-  indicator.onScroll = (delta, orientation) {
-    print('Scrolled $orientation by $delta');
-  };
+  indicator.scrollEvents.listen((event) {
+    print('Scrolled ${event.orientation} by ${event.delta}');
+  });
 ```
 
 ### Flutter Example
