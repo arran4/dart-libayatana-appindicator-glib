@@ -51,19 +51,6 @@ class AppIndicator {
   final _xAyatanaActivateController =
       StreamController<XAyatanaActivateEvent>.broadcast();
 
-  // Callbacks
-  @Deprecated('Use activateEvents instead')
-  void Function(int x, int y)? onActivate;
-
-  @Deprecated('Use secondaryActivateEvents instead')
-  void Function(int x, int y)? onSecondaryActivate;
-
-  @Deprecated('Use contextMenuEvents instead')
-  void Function(int x, int y)? onContextMenu;
-
-  @Deprecated('Use scrollEvents instead')
-  void Function(int delta, String orientation)? onScroll;
-
   AppIndicator({
     required this.id,
     String iconName = '',
@@ -102,38 +89,26 @@ class AppIndicator {
 
   void _setupStrategyEvents() {
     _strategy.onScroll = (delta, orientation) {
-      // ignore: deprecated_member_use_from_same_package
-      onScroll?.call(delta, orientation);
       _scrollController.add(ScrollEvent(delta, orientation));
     };
 
     _strategy.onSecondaryActivate = (x, y) {
-      // ignore: deprecated_member_use_from_same_package
-      onSecondaryActivate?.call(x, y);
       _secondaryActivateController.add(SecondaryActivateEvent(x, y));
     };
 
     _strategy.onXAyatanaSecondaryActivate = (timestamp) {
-      // ignore: deprecated_member_use_from_same_package
-      onSecondaryActivate?.call(0, 0);
       _secondaryActivateController.add(SecondaryActivateEvent(0, 0, timestamp));
     };
 
     _strategy.onActivate = (x, y) {
-      // ignore: deprecated_member_use_from_same_package
-      onActivate?.call(x, y);
       _activateController.add(ActivateEvent(x, y));
     };
 
     _strategy.onContextMenu = (x, y) {
-      // ignore: deprecated_member_use_from_same_package
-      onContextMenu?.call(x, y);
       _contextMenuController.add(ContextMenuEvent(x, y));
     };
 
     _strategy.onXAyatanaActivate = (x, y, timestamp) {
-      // ignore: deprecated_member_use_from_same_package
-      onActivate?.call(x, y);
       _xAyatanaActivateController.add(XAyatanaActivateEvent(x, y, timestamp));
     };
   }
