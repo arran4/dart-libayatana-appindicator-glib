@@ -37,41 +37,35 @@ class AppWindowException implements Exception {
 /// A class for interacting with GTK AppWindow functionality via FFI.
 /// This wraps native GTK calls to eliminate C/C++ code on the client side.
 class AppWindow {
-  late final DynamicLibrary _libGtk;
-  late final Pointer<Void> _window;
+  static final DynamicLibrary _libGtk = _openLibrary();
+  static final _GtkInitCheckDart _gtkInitCheck = _libGtk
+      .lookupFunction<_GtkInitCheckC, _GtkInitCheckDart>('gtk_init_check');
+  static final _GtkWindowNewDart _gtkWindowNew = _libGtk
+      .lookupFunction<_GtkWindowNewC, _GtkWindowNewDart>('gtk_window_new');
+  static final _GtkWidgetShowAllDart _gtkWidgetShowAll =
+      _libGtk.lookupFunction<_GtkWidgetShowAllC, _GtkWidgetShowAllDart>(
+          'gtk_widget_show_all');
+  static final _GtkWidgetShowDart _gtkWidgetShow = _libGtk
+      .lookupFunction<_GtkWidgetShowC, _GtkWidgetShowDart>('gtk_widget_show');
+  static final _GtkWidgetHideDart _gtkWidgetHide = _libGtk
+      .lookupFunction<_GtkWidgetHideC, _GtkWidgetHideDart>('gtk_widget_hide');
+  static final _GtkWindowCloseDart _gtkWindowClose =
+      _libGtk.lookupFunction<_GtkWindowCloseC, _GtkWindowCloseDart>(
+          'gtk_window_close');
+  static final _GtkWindowMoveDart _gtkWindowMove = _libGtk
+      .lookupFunction<_GtkWindowMoveC, _GtkWindowMoveDart>('gtk_window_move');
 
-  late final _GtkInitCheckDart _gtkInitCheck;
-  late final _GtkWindowNewDart _gtkWindowNew;
-  late final _GtkWidgetShowAllDart _gtkWidgetShowAll;
-  late final _GtkWidgetShowDart _gtkWidgetShow;
-  late final _GtkWidgetHideDart _gtkWidgetHide;
-  late final _GtkWindowCloseDart _gtkWindowClose;
-  late final _GtkWindowMoveDart _gtkWindowMove;
-
-  AppWindow({Pointer<Void>? window}) {
+  static DynamicLibrary _openLibrary() {
     try {
-      _libGtk = DynamicLibrary.open('libgtk-3.so.0');
+      return DynamicLibrary.open('libgtk-3.so.0');
     } catch (e) {
       throw AppWindowException('Failed to load libgtk-3.so.0: $e');
     }
+  }
 
-    _gtkInitCheck = _libGtk
-        .lookupFunction<_GtkInitCheckC, _GtkInitCheckDart>('gtk_init_check');
-    _gtkWindowNew = _libGtk
-        .lookupFunction<_GtkWindowNewC, _GtkWindowNewDart>('gtk_window_new');
-    _gtkWidgetShowAll =
-        _libGtk.lookupFunction<_GtkWidgetShowAllC, _GtkWidgetShowAllDart>(
-            'gtk_widget_show_all');
-    _gtkWidgetShow = _libGtk
-        .lookupFunction<_GtkWidgetShowC, _GtkWidgetShowDart>('gtk_widget_show');
-    _gtkWidgetHide = _libGtk
-        .lookupFunction<_GtkWidgetHideC, _GtkWidgetHideDart>('gtk_widget_hide');
-    _gtkWindowClose =
-        _libGtk.lookupFunction<_GtkWindowCloseC, _GtkWindowCloseDart>(
-            'gtk_window_close');
-    _gtkWindowMove = _libGtk
-        .lookupFunction<_GtkWindowMoveC, _GtkWindowMoveDart>('gtk_window_move');
+  late final Pointer<Void> _window;
 
+  AppWindow({Pointer<Void>? window}) {
     // Make sure gtk_init_check is called to gracefully handle headless
     if (_gtkInitCheck(nullptr, nullptr) == 0) {
       throw AppWindowException('gtk_init_check failed.');

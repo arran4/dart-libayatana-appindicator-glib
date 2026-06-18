@@ -9,8 +9,8 @@ void main() {
       final window = AppWindow();
       expect(window.pointer, isNot(nullptr));
     } catch (e) {
-      // In CI without GTK/X11 this might fail, so we just log it
-      print('Skipping test due to missing GTK environment: $e');
+      // In CI without GTK/X11 this might fail, so we skip it
+      markTestSkipped('Skipping test due to missing GTK environment: $e');
     }
   });
 }
